@@ -20,7 +20,7 @@
                     "fields": [
                         {
                             "name": "id",
-                            "type": "uuid",
+                            "type": "int",
                             "primary": true
                         },
                         {

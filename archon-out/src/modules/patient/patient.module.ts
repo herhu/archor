@@ -17,4 +17,4 @@ providers: [
 PatientNotificationServiceService,
 ],
 })
-export class Patient DomainModule {}
+export class PatientModule {}

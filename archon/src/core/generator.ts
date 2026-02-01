@@ -66,9 +66,14 @@ async function generateScaffold(spec: DesignSpec, outDir: string, tplDir: string
     await writeArtifact(path.join(outDir, 'src/main.ts'), mainTpl, dryRun);
 
     const appModuleTpl = await fs.readFile(path.join(tplDir, 'nestjs/app.module.ts.hbs'), 'utf-8');
-    // Need to gather all modules to import them
-    const moduleNames = spec.domains.map(d => d.name);
-    const appModuleContent = Handlebars.compile(appModuleTpl)({ moduleNames });
+    // Need to gather all modules to import them. Using key for cleaner paths/names.
+    const moduleImports = spec.domains.map(d => ({
+        className: d.key.charAt(0).toUpperCase() + d.key.slice(1) + 'Module',
+        importPath: `./modules/${d.key}/${d.key}.module`,
+        domainKey: d.key
+    }));
+
+    const appModuleContent = Handlebars.compile(appModuleTpl)({ moduleImports });
     await writeArtifact(path.join(outDir, 'src/app.module.ts'), appModuleContent, dryRun);
 }
 
@@ -80,6 +85,8 @@ async function generateDomain(domain: Domain, outDir: string, tplDir: string, dr
     const moduleTpl = await fs.readFile(path.join(tplDir, 'nestjs/module.ts.hbs'), 'utf-8');
     const moduleContent = Handlebars.compile(moduleTpl)({
         domainName: domain.name,
+        // Use consistent naming
+        moduleClassName: domain.key.charAt(0).toUpperCase() + domain.key.slice(1) + 'Module',
         controllers: domain.services.map(s => s.name + 'Controller'),
         services: domain.services.map(s => s.name),
         entities: domain.entities.map(e => e.name)
@@ -120,12 +127,20 @@ async function generateDomain(domain: Domain, outDir: string, tplDir: string, dr
             delete: service.crud?.includes('delete'),
         };
 
+        // Prepare operations with pre-calculated flags
+        const operations = service.operations?.map(op => ({
+            ...op,
+            authRequired: op.authz?.required !== false, // Default true
+            // Pre-calculate scopes string for simpler template? Or keep logic in template?
+            // Let's keep logic in template for now but authRequired is needed.
+        }));
+
         const content = Handlebars.compile(controllerTpl)({
             service,
             entity: relatedEntity,
             domainKey: domain.key,
             crud: crudFlags,
-            operations: service.operations
+            operations: operations
         });
         await writeArtifact(path.join(domainDir, 'controllers', `${service.name}.controller.ts`), content, dryRun);
     }

@@ -7,31 +7,27 @@ I have implemented **Archon**, the CLI tool that turns a `DesignSpec` into a pro
 - **Generators (`archon/src/core/generator.ts`)**: Engine + Handlebars helpers.
 - **Templates**: `src/templates/` (NestJS, Auth, Docs).
 
-## 2. Capabilities & Fixes (V1.4 Production Hardening)
-### Correctness & Security (P0)
-- **Schema Hardening**: "LLM-proof" validation using AJV.
-  - **Regex Enforcement**: Routes (no leading slash), Paths (leading slash required), Scopes (format `domain:action`).
-  - **Semantic Integrity**: Fails if domain has multiple entities but service doesn't specify `service.entity`.
-- **Strict JWT**: Fails fast if configuration is missing.
-- **Strict Scope**: `ScopesGuard` explicitly throws `ForbiddenException`.
+## 2. Capabilities & Fixes (V1.5 Final Polish)
+### Correctness (P0)
+- **Module Imports**: `AppModule` now correctly imports modules using their clean key-based paths (e.g. `./modules/patient/patient.module`).
+- **Class Naming**: Module classes are strictly PascalCase (e.g. `PatientModule`), handling spaces in domain names correctly.
+- **Controller Decorators**: Fixed duplicate decorators bug. Scopes are properly inline formatted.
 
-### Product Quality (P1)
-- **Formatting**: Controller clean indentation.
-- **Type Safety**: Improved Entity typing (`json`, `uuid`, `number`).
-- **DX**:
-  - **README.md**: Auto-generated with Setup, Run, Test, and Auth instructions.
-  - **ValidationPipe**: Global validation enabled by default.
+### Polish & DX (P1)
+- **Optional Auth**: Custom operations with `authz.required: false` no longer generate `UseGuards` decorators.
+- **Entity Typing**: Primary keys with `int` type now generate `number` typescript fields.
+- **Clean README**: Removed irrelevant migration commands.
 
 ## 3. Verification Result
-Tests run in `archon-out/` using `sample-spec.json` (valid) and `ambiguous-spec.json` (invalid).
+Tests run in `archon-out/` using `sample-spec.json`.
 
-1.  **Build**: `npm run build` (Clean).
-2.  **Validation Test**: `ambiguous-spec.json` correctly FAILED validation.
-3.  **Generation Test**: `sample-spec.json` SUCCEEDED.
-4.  **Inspect**:
-    -   `README.md`: Created and populated.
-    -   `PatientNotification.entity.ts`: Correct typing.
-    -   `PatientNotificationService.controller.ts`: Correct conditional `@Body`.
+1.  **Build**: `npm run build` (Templates copied correctly).
+2.  **Generation**: `sample-spec.json` SUCCEEDED.
+3.  **Inspect**:
+    -   `PatientModule`: Correct class name `PatientModule`.
+    -   `AppModule`: Correct import `./modules/patient/patient.module`.
+    -   `Controller`: Clean decorators, `Status` op has no guards.
+    -   `Entity`: ID is `number`.
 
 ## 4. How to use it
 1.  **Build**: `cd archon && npm install && npm run build`

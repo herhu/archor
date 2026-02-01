@@ -5,7 +5,7 @@ export class {{entity.name}} {
 {{#each entity.fields}}
 {{#if primary}}
 @PrimaryGeneratedColumn('{{type}}')
-{{name}}: string;
+{{name}}: {{#if (eq type 'int')}}number{{else}}{{#if (eq type 'float')}}number{{else}}string{{/if}}{{/if}};
 {{else}}
 {{#if (eq type 'uuid')}}
 @Column({ type: 'uuid', nullable: {{#if nullable}}true{{else}}false{{/if}} })

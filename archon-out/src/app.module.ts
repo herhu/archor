@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
-import { Patient DomainModule } from './modules/patient domain/patient domain.module';
+import { PatientModule } from './modules/patient/patient.module';
 
 @Module({
 imports: [
@@ -14,7 +14,7 @@ entities: [__dirname + '/**/*.entity{.ts,.js}'],
 synchronize: true, // DEV only
 }),
 AuthModule,
-Patient DomainModule,
+PatientModule,
 ],
 controllers: [],
 providers: [],

@@ -2,8 +2,8 @@ import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 @Entity()
 export class PatientNotification {
-@PrimaryGeneratedColumn('uuid')
-id: string;
+@PrimaryGeneratedColumn('int')
+id: number;
 
 @Column({ nullable: false })
 customerId: string;

@@ -15,11 +15,7 @@ cp .env.example .env
 # Update .env with your configuration
 ```
 
-3. Run database migrations (TypeORM):
-```bash
-# Ensure DATABASE_URL is set
-npm run typeorm migration:run
-```
+
 
 ## Running the app
 

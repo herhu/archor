@@ -53,8 +53,6 @@ async Toggle(@Body() body: any) {
 return { message: 'Operation Toggle executed' };
 }
 @Get('/status')
-@UseGuards(JwtAuthGuard, ScopesGuard)
-@Scopes('patient:read')
 async Status() {
 // TODO: Implement operation logic
 return { message: 'Operation Status executed' };
