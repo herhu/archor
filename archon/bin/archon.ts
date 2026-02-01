@@ -21,6 +21,7 @@ program
     .command('generate')
     .description('Generate code from designspec.json')
     .option('-s, --spec <path>', 'Path to designspec.json', 'designspec.json')
+    .option('-d, --dry-run', 'Run without writing files')
     .action(generateCommand);
 
 program.parse();

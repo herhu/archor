@@ -22,7 +22,7 @@ const requiredScopes = this.reflector.getAllAndOverride<string[]>(SCOPES_KEY, [
     throw new ForbiddenException('No scopes found on user');
     }
 
-    const hasScope = requiredScopes.some((scope) => user.scopes.includes(scope));
+    const hasScope = requiredScopes.every((scope) => user.scopes.includes(scope));
 
     // Optional: Log missing scopes for debugging
     // if (!hasScope) console.log(`Required: ${requiredScopes}, Found: ${user.scopes}`);

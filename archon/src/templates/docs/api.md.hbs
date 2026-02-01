@@ -21,33 +21,33 @@ curl -X POST "{{tokenUrl}}" \
 
 ```bash
 export TOKEN="<access_token>"
-    ```
+```
 
-    All examples below assume:
+All examples below assume:
 
-    ```bash
-    -H "Authorization: Bearer {{token}}"
-    ```
+```bash
+-H "Authorization: Bearer {{token}}"
+```
 
-    > **Scopes convention (domain-based):**
-    >
-    > * Read: `domain:read`
-    > * Write: `domain:write`
+> **Scopes convention (domain-based):**
+>
+> * Read: `domain:read`
+> * Write: `domain:write`
 
-    ---
+---
 
-    ## Endpoints
+## Endpoints
 
-    {{#each endpoints}}
+{{#each endpoints}}
 
-    ### {{method}} `{{path}}`
+### {{method}} `{{path}}`
 
-    **Auth:** {{#if authRequired}}Yes{{else}}No{{/if}}
-    **Required scope:** {{scope}}
-    **Description:** {{description}}
+**Auth:** {{#if authRequired}}Yes{{else}}No{{/if}}
+**Required scope:** {{scope}}
+**Description:** {{description}}
 
-    ```bash
-    {{{curl}}}
-    ```
+```bash
+{{{curl}}}
+```
 
-    {{/each}}
+{{/each}}

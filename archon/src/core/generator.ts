@@ -9,34 +9,44 @@ Handlebars.registerHelper('lower', (str) => str.toLowerCase());
 Handlebars.registerHelper('capitalize', (str) => str.charAt(0).toUpperCase() + str.slice(1));
 Handlebars.registerHelper('kebab', (str) => str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase());
 Handlebars.registerHelper('eq', (a, b) => a === b);
+Handlebars.registerHelper('nestjsMethod', (method) => {
+    switch (String(method).toUpperCase()) {
+        case 'GET': return 'Get';
+        case 'POST': return 'Post';
+        case 'PUT': return 'Put';
+        case 'PATCH': return 'Patch';
+        case 'DELETE': return 'Delete';
+        default: return 'Get';
+    }
+});
 
-export async function generateApp(spec: DesignSpec, outDir: string) {
+export async function generateApp(spec: DesignSpec, outDir: string, dryRun: boolean = false) {
     const templatesDir = path.join(__dirname, '../../src/templates');
 
     // 1. Scaffold Base App
-    await generateScaffold(spec, outDir, templatesDir);
+    await generateScaffold(spec, outDir, templatesDir, dryRun);
 
     // 2. Generate Modules (Domains)
     for (const domain of spec.domains) {
-        await generateDomain(domain, outDir, templatesDir);
+        await generateDomain(domain, outDir, templatesDir, dryRun);
     }
 
     // 3. Generate Auth
-    await generateAuth(spec, outDir, templatesDir);
+    await generateAuth(spec, outDir, templatesDir, dryRun);
 
     // 4. Generate Docs
-    await generateDocs(spec, outDir, templatesDir);
+    await generateDocs(spec, outDir, templatesDir, dryRun);
 }
 
-async function generateScaffold(spec: DesignSpec, outDir: string, tplDir: string) {
+async function generateScaffold(spec: DesignSpec, outDir: string, tplDir: string, dryRun: boolean) {
     // package.json
     const pkgTpl = await fs.readFile(path.join(tplDir, 'nestjs/package.json.hbs'), 'utf-8');
     const pkgContent = Handlebars.compile(pkgTpl)({ projectName: spec.name });
-    await writeArtifact(path.join(outDir, 'package.json'), pkgContent);
+    await writeArtifact(path.join(outDir, 'package.json'), pkgContent, dryRun);
 
     // tsconfig.json
     const tsConfigTpl = await fs.readFile(path.join(tplDir, 'nestjs/tsconfig.json.hbs'), 'utf-8');
-    await writeArtifact(path.join(outDir, 'tsconfig.json'), tsConfigTpl);
+    await writeArtifact(path.join(outDir, 'tsconfig.json'), tsConfigTpl, dryRun);
 
     // .env.example
     const envTpl = await fs.readFile(path.join(tplDir, 'nestjs/env.example.hbs'), 'utf-8');
@@ -46,20 +56,20 @@ async function generateScaffold(spec: DesignSpec, outDir: string, tplDir: string
         jwtAudience: spec.crossCutting?.auth?.jwt?.audience,
         jwtJwksUri: spec.crossCutting?.auth?.jwt?.jwksUri,
     });
-    await writeArtifact(path.join(outDir, '.env.example'), envContent);
+    await writeArtifact(path.join(outDir, '.env.example'), envContent, dryRun);
 
     // Create src content
     const mainTpl = await fs.readFile(path.join(tplDir, 'nestjs/main.ts.hbs'), 'utf-8');
-    await writeArtifact(path.join(outDir, 'src/main.ts'), mainTpl);
+    await writeArtifact(path.join(outDir, 'src/main.ts'), mainTpl, dryRun);
 
     const appModuleTpl = await fs.readFile(path.join(tplDir, 'nestjs/app.module.ts.hbs'), 'utf-8');
     // Need to gather all modules to import them
     const moduleNames = spec.domains.map(d => d.name);
     const appModuleContent = Handlebars.compile(appModuleTpl)({ moduleNames });
-    await writeArtifact(path.join(outDir, 'src/app.module.ts'), appModuleContent);
+    await writeArtifact(path.join(outDir, 'src/app.module.ts'), appModuleContent, dryRun);
 }
 
-async function generateDomain(domain: Domain, outDir: string, tplDir: string) {
+async function generateDomain(domain: Domain, outDir: string, tplDir: string, dryRun: boolean) {
     const domainKebab = domain.key;
     const domainDir = path.join(outDir, 'src/modules', domainKebab);
 
@@ -71,13 +81,13 @@ async function generateDomain(domain: Domain, outDir: string, tplDir: string) {
         services: domain.services.map(s => s.name),
         entities: domain.entities.map(e => e.name)
     });
-    await writeArtifact(path.join(domainDir, `${domainKebab}.module.ts`), moduleContent);
+    await writeArtifact(path.join(domainDir, `${domainKebab}.module.ts`), moduleContent, dryRun);
 
     // Entities
     const entityTpl = await fs.readFile(path.join(tplDir, 'nestjs/entity.ts.hbs'), 'utf-8');
     for (const entity of domain.entities) {
         const content = Handlebars.compile(entityTpl)({ entity });
-        await writeArtifact(path.join(domainDir, 'entities', `${entity.name}.entity.ts`), content);
+        await writeArtifact(path.join(domainDir, 'entities', `${entity.name}.entity.ts`), content, dryRun);
     }
 
     // Services
@@ -85,7 +95,7 @@ async function generateDomain(domain: Domain, outDir: string, tplDir: string) {
     for (const service of domain.services) {
         const relatedEntity = domain.entities[0]; // Simplified
         const content = Handlebars.compile(serviceTpl)({ service, entity: relatedEntity });
-        await writeArtifact(path.join(domainDir, 'services', `${service.name}.service.ts`), content);
+        await writeArtifact(path.join(domainDir, 'services', `${service.name}.service.ts`), content, dryRun);
     }
 
     // Controllers
@@ -107,45 +117,45 @@ async function generateDomain(domain: Domain, outDir: string, tplDir: string) {
             crud: crudFlags,
             operations: service.operations
         });
-        await writeArtifact(path.join(domainDir, 'controllers', `${service.name}.controller.ts`), content);
+        await writeArtifact(path.join(domainDir, 'controllers', `${service.name}.controller.ts`), content, dryRun);
     }
 
     // DTOs (Simplified generic DTO for now)
     const dtoTpl = await fs.readFile(path.join(tplDir, 'nestjs/dto.ts.hbs'), 'utf-8');
     for (const entity of domain.entities) {
         const content = Handlebars.compile(dtoTpl)({ entity });
-        await writeArtifact(path.join(domainDir, 'dtos', `create-${entity.name.toLowerCase()}.dto.ts`), content);
+        await writeArtifact(path.join(domainDir, 'dtos', `create-${entity.name.toLowerCase()}.dto.ts`), content, dryRun);
     }
 }
 
-async function generateAuth(spec: DesignSpec, outDir: string, tplDir: string) {
+async function generateAuth(spec: DesignSpec, outDir: string, tplDir: string, dryRun: boolean) {
     const authDir = path.join(outDir, 'src/auth');
 
     // generic auth module
     const authModuleTpl = await fs.readFile(path.join(tplDir, 'nestjs/auth/auth.module.ts.hbs'), 'utf-8');
-    await writeArtifact(path.join(authDir, 'auth.module.ts'), authModuleTpl);
+    await writeArtifact(path.join(authDir, 'auth.module.ts'), authModuleTpl, dryRun);
 
     // jwt config
     const jwtConfigTpl = await fs.readFile(path.join(tplDir, 'nestjs/auth/jwt.config.ts.hbs'), 'utf-8');
-    await writeArtifact(path.join(authDir, 'jwt.config.ts'), jwtConfigTpl);
+    await writeArtifact(path.join(authDir, 'jwt.config.ts'), jwtConfigTpl, dryRun);
 
     // jwt guard
     const jwtGuardTpl = await fs.readFile(path.join(tplDir, 'nestjs/auth/jwt.guard.ts.hbs'), 'utf-8');
-    await writeArtifact(path.join(authDir, 'jwt.guard.ts'), jwtGuardTpl);
+    await writeArtifact(path.join(authDir, 'jwt.guard.ts'), jwtGuardTpl, dryRun);
 
     // scopes decorator
     const scopesDecTpl = await fs.readFile(path.join(tplDir, 'nestjs/auth/scopes.decorator.ts.hbs'), 'utf-8');
-    await writeArtifact(path.join(authDir, 'scopes.decorator.ts'), scopesDecTpl);
+    await writeArtifact(path.join(authDir, 'scopes.decorator.ts'), scopesDecTpl, dryRun);
 
     // scopes guard
     const scopesGuardTpl = await fs.readFile(path.join(tplDir, 'nestjs/auth/scopes.guard.ts.hbs'), 'utf-8');
-    await writeArtifact(path.join(authDir, 'scopes.guard.ts'), scopesGuardTpl);
+    await writeArtifact(path.join(authDir, 'scopes.guard.ts'), scopesGuardTpl, dryRun);
 }
 
 
 // --- DOCS GENERATOR (Implementing prompt-17 logic) ---
 
-async function generateDocs(spec: DesignSpec, outDir: string, tplDir: string) {
+async function generateDocs(spec: DesignSpec, outDir: string, tplDir: string, dryRun: boolean) {
     const docsDir = path.join(outDir, 'docs');
     const endpoints = buildEndpoints(spec);
 
@@ -161,7 +171,7 @@ async function generateDocs(spec: DesignSpec, outDir: string, tplDir: string) {
         endpoints
     });
 
-    await writeArtifact(path.join(docsDir, 'api.md'), content);
+    await writeArtifact(path.join(docsDir, 'api.md'), content, dryRun);
 }
 
 function buildEndpoints(spec: DesignSpec) {

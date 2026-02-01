@@ -17,64 +17,58 @@ I have implemented **Archon**, the CLI tool that turns a `DesignSpec` into a pro
   - `entities/*.entity.ts` (TypeORM)
   - `services/*.service.ts` (CRUD logic)
   - `controllers/*.controller.ts` (API endpoints + Auth guards)
-  - `dtos/*.dto.ts` (Data Transfer Objects)
+  - **Correct Decorators**: Uses `@Get`, `@Post`, `@Patch` correctly.
 - **Conditional CRUD**: Only generates endpoints specified in the spec's `crud` array.
 
-### Authentication & Authorization
+### Authentication & Authorization (Secured)
 - **Zero-dependency verification** using `jose`.
 - **Scope Enforcement**:
-  - `JwtAuthGuard`: Extracts and normalizes scopes/permissions from token.
-  - `ScopesGuard`: Enforces required scopes using `@Scopes()` decorator.
-  - Controllers are automatically decorated with default scopes (e.g., `domain:read`, `domain:write`) or custom overrides (`authz.scopesAll`).
-- Supports both **JWKS** (Auth0/OIDC) and **Shared Secret**.
+  - `ScopesGuard`: Enforces **ALL** required scopes (`every`) for stricter security.
+  - Automatically wired in `AuthModule` (guards exported).
+  - Controllers decorated with `@Scopes('s1', 's2')`.
 
-### Documentation (Prompt-17 Implementation)
+### Documentation (Cleaned)
 - Generates `docs/api.md` with **ready-to-paste Curl examples**.
+- Formatting is strictly controlled (markdown blocks are clean).
 - **Postman Ready**: uses `{{baseUrl}}` and `{{token}}` variables directly.
-- Includes a token helper command for client credentials flow.
+
+### Robustness Features
+- **Validation**:
+  - **Schema**: Validates JSON structure (AJV).
+  - **Semantic**: Checks for duplicate domains, invalid scope formats, etc.
+- **Dry Run**: `archon generate --dry-run` previews file creation without writing.
+- **Stable Tooling**: `tsconfig.json` configured for proper CommonJS/ESM interop (`fs-extra` support).
 
 ## 3. Verification Result
-I ran a test using `sample-spec.json` (a Patient Notification system).
+I ran tests using `sample-spec.json` and `invalid-spec.json`.
 
-**Input (`sample-spec.json`):**
-```json
-{
-  "name": "Validation App",
-  "domains": [{ "name": "Patient", "key": "patient", ... }]
-}
+**Verification Steps:**
+1.  `npm run build`: Success (TS clean).
+2.  `archon generate --dry-run`: Success (Logs "Would create...").
+3.  `archon generate -s invalid-spec.json`: Failed correctly ("Duplicate domain key").
+4.  `archon generate -s sample-spec.json`: Success.
+
+**Verified Output (`docs/api.md`):**
+```markdown
+## Authentication — Get a Token (Client Credentials)
+If your IdP supports **OAuth2 Client Credentials**, run:
+```bash
+curl -X POST "{{tokenUrl}}" ...
+```
+(No indentation artifacts)
 ```
 
-**Output Structure:**
-```text
-archon/
-├── package.json
-├── .env.example
-├── src/
-│   ├── app.module.ts              # Automatically imports PatientModule & uses DATABASE_URL
-│   ├── auth/
-│   │   ├── jwt.guard.ts           # The "jose" implementation + scope extraction
-│   │   ├── scopes.guard.ts        # Enforces @Scopes()
-│   │   ├── scopes.decorator.ts    # Decorator definition
-│   │   └── jwt.config.ts
-│   └── modules/
-│       └── patient/
-│           ├── controllers/       # PatientNotificationController w/ @Scopes
-│           ├── services/
-│           └── entities/
-└── docs/
-    └── api.md                     # Markdown with Curl commands & {{baseUrl}}
-```
-
-**Sample Controller Output (Verified):**
+**Verified Output (`PatientNotification.controller.ts`):**
 ```typescript
 @Patch('/toggle')
 @UseGuards(JwtAuthGuard, ScopesGuard)
 @Scopes('notifications:toggle')
-async Toggle(@Body() body: any) { ... }
+async Toggle(...)
 ```
 
 ## 4. How to use it
 1.  **Initialize**: `mkdir my-project && cd my-project && ../archon/bin/archon.ts init my-project`
 2.  **Edit Spec**: Modify `designspec.json`.
-3.  **Generate**: `../archon/bin/archon.ts generate`
-4.  **Run**: `npm install && npm start`
+3.  **Preview**: `../archon/bin/archon.ts generate --dry-run`
+4.  **Generate**: `../archon/bin/archon.ts generate`
+5.  **Run**: `npm install && npm start`
