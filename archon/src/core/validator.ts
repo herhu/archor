@@ -159,8 +159,17 @@ export function validateSpecSemantic(spec: DesignSpec): string[] {
             }
 
             s.operations?.forEach(op => {
-                if (op.authz?.scopesAll && !Array.isArray(op.authz.scopesAll)) {
-                    errors.push(`Operation ${op.name} in service ${s.name} has invalid authz.scopesAll (must be array)`);
+                if (op.authz?.scopesAll) {
+                    if (!Array.isArray(op.authz.scopesAll)) {
+                        errors.push(`Operation ${op.name} in service ${s.name} has invalid authz.scopesAll (must be array)`);
+                    } else {
+                        // Enforce naming convention
+                        op.authz.scopesAll.forEach(scope => {
+                            if (!scope.startsWith(`${d.key}:`)) {
+                                errors.push(`Invalid scope "${scope}" in operation "${op.name}". must start with domain key "${d.key}:"`);
+                            }
+                        });
+                    }
                 }
             });
         });

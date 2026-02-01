@@ -120,7 +120,7 @@ curl -X DELETE "{{baseUrl}}/notifications/:id" \
 ### PATCH `/notifications/toggle`
 
 **Auth:** Yes
-**Required scope:** notifications:toggle
+**Required scope:** patient:toggle
 **Description:** Operation: Toggle
 
 ```bash

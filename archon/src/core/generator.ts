@@ -166,6 +166,14 @@ async function generateDomain(domain: Domain, outDir: string, tplDir: string, dr
             delete: service.crud?.includes('delete'),
         };
 
+        const crudScopes = {
+            create: [`${domain.key}:write`],
+            findAll: [`${domain.key}:read`],
+            findOne: [`${domain.key}:read`],
+            update: [`${domain.key}:write`],
+            delete: [`${domain.key}:write`],
+        };
+
         const operations = service.operations?.map(op => ({
             ...op,
             authRequired: op.authz?.required !== false,
@@ -181,6 +189,7 @@ async function generateDomain(domain: Domain, outDir: string, tplDir: string, dr
             entity: relatedEntity,
             domainKey: domain.key,
             crud: crudFlags,
+            crudScopes,
             operations: operations
         });
         await writeArtifact(path.join(domainDir, 'controllers', `${norm.controllerFileName}.ts`), content, dryRun);

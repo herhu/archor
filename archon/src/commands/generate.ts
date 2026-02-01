@@ -5,7 +5,7 @@ import { DesignSpec } from '../core/spec';
 import { generateApp } from '../core/generator';
 import { validateSpecSchema, validateSpecSemantic } from '../core/validator';
 
-export async function generateCommand(options: { spec: string, dryRun?: boolean }) {
+export async function generateCommand(options: { spec: string, dryRun?: boolean, qa?: boolean }) {
     const specPath = path.resolve(process.cwd(), options.spec);
 
     try {
@@ -31,6 +31,20 @@ export async function generateCommand(options: { spec: string, dryRun?: boolean 
         const outDir = process.cwd();
 
         await generateApp(spec, outDir, options.dryRun);
+
+        if (options.qa !== false) {
+            console.log(chalk.blue(`Running QA Gate...`));
+            try {
+                const cp = require('child_process');
+                // Basic QA: install and build
+                cp.execSync('npm install', { cwd: outDir, stdio: 'inherit' });
+                cp.execSync('npm run build', { cwd: outDir, stdio: 'inherit' });
+                console.log(chalk.green(`QA Gate Passed!`));
+            } catch (e) {
+                console.error(chalk.red(`QA Gate Failed!`));
+                process.exit(1);
+            }
+        }
 
         console.log(chalk.green(options.dryRun ? 'Dry run complete!' : 'Generation complete!'));
     } catch (err: any) {

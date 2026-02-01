@@ -32,73 +32,78 @@ if (typeof c === 'string' && c.length) return [c];
 return [];
 }
 
-function normalizeScopes(payload: any): string[] {
-// Standard OAuth2/OIDC 'scope' is a space-separated string
-if (typeof payload.scope === 'string') {
-return payload.scope.split(' ');
-}
+function extractScopes(payload: any): string[] {
+const candidates = [
+payload?.scope, // "a b c"
+payload?.scp, // ["a","b"] or "a b"
+payload?.permissions, // ["x:y"]
+payload?.['https://example.com/scopes'],
+payload?.['https://example.com/permissions']
+];
 
-// Azure AD sometimes uses 'scp' (string)
-if (typeof payload.scp === 'string') {
-return payload.scp.split(' ');
-}
+const scopes = new Set<string>();
 
-// Some use 'permissions' array
-if (Array.isArray(payload.permissions)) {
-return payload.permissions.map(String);
-}
+    for (const c of candidates) {
+    if (!c) continue;
 
-return [];
-}
-
-@Injectable()
-export class JwtAuthGuard implements CanActivate {
-private jwks?: ReturnType<typeof createRemoteJWKSet>;
-    private cfg = loadJwtConfig();
-
-    constructor() {
-    if (this.cfg.mode === 'jwks' && this.cfg.jwksUri) {
-    this.jwks = createRemoteJWKSet(new URL(this.cfg.jwksUri));
+    if (Array.isArray(c)) {
+    c.forEach(s => scopes.add(String(s)));
+    } else if (typeof c === 'string') {
+    c.split(/[ ,]+/).forEach(s => s && scopes.add(s));
     }
     }
 
-    async canActivate(context: ExecutionContext): Promise<boolean> {
-        const req = context.switchToHttp().getRequest();
-        const token = extractBearerToken(req);
-        if (!token) throw new UnauthorizedException('Missing Bearer token');
+    return Array.from(scopes);
+    }
 
-        try {
-        const { payload } = await this.verify(token);
+    @Injectable()
+    export class JwtAuthGuard implements CanActivate {
+    private jwks?: ReturnType<typeof createRemoteJWKSet>;
+        private cfg = loadJwtConfig();
 
-        const user: AuthUser = {
-        sub: typeof payload.sub === 'string' ? payload.sub : undefined,
-        email: typeof (payload as any).email === 'string' ? (payload as any).email : undefined,
-        roles: normalizeRoles(payload),
-        scopes: normalizeScopes(payload),
-        raw: payload
-        };
-
-        req.user = user;
-        return true;
-        } catch (e: any) {
-        console.error(e);
-        throw new UnauthorizedException('Invalid token');
+        constructor() {
+        if (this.cfg.mode === 'jwks' && this.cfg.jwksUri) {
+        this.jwks = createRemoteJWKSet(new URL(this.cfg.jwksUri));
         }
         }
 
-        private async verify(token: string) {
-        if (this.cfg.mode === 'jwks') {
-        if (!this.jwks) throw new Error('JWKS not configured');
-        return jwtVerify(token, this.jwks, {
-        issuer: this.cfg.issuer,
-        audience: this.cfg.audience
-        });
-        }
+        async canActivate(context: ExecutionContext): Promise<boolean> {
+            const req = context.switchToHttp().getRequest();
+            const token = extractBearerToken(req);
+            if (!token) throw new UnauthorizedException('Missing Bearer token');
 
-        const secret = new TextEncoder().encode(this.cfg.secret || '');
-        return jwtVerify(token, secret, {
-        issuer: this.cfg.issuer,
-        audience: this.cfg.audience
-        });
-        }
-        }
+            try {
+            const { payload } = await this.verify(token);
+
+            const user: AuthUser = {
+            sub: typeof payload.sub === 'string' ? payload.sub : undefined,
+            email: typeof (payload as any).email === 'string' ? (payload as any).email : undefined,
+            roles: normalizeRoles(payload),
+            scopes: extractScopes(payload),
+            raw: payload
+            };
+
+            req.user = user;
+            return true;
+            } catch (e: any) {
+            console.error(e);
+            throw new UnauthorizedException('Invalid token');
+            }
+            }
+
+            private async verify(token: string) {
+            if (this.cfg.mode === 'jwks') {
+            if (!this.jwks) throw new Error('JWKS not configured');
+            return jwtVerify(token, this.jwks, {
+            issuer: this.cfg.issuer,
+            audience: this.cfg.audience
+            });
+            }
+
+            const secret = new TextEncoder().encode(this.cfg.secret || '');
+            return jwtVerify(token, secret, {
+            issuer: this.cfg.issuer,
+            audience: this.cfg.audience
+            });
+            }
+            }

@@ -63,7 +63,7 @@
                             "path": "/toggle",
                             "authz": {
                                 "scopesAll": [
-                                    "notifications:toggle"
+                                    "patient:toggle"
                                 ]
                             }
                         },

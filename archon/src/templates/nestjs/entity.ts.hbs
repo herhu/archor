@@ -4,7 +4,7 @@ import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 export class {{entity.name}} {
 {{#each entity.fields}}
 {{#if primary}}
-@PrimaryGeneratedColumn('{{type}}')
+@PrimaryGeneratedColumn({{#if (eq type 'uuid')}}'uuid'{{/if}})
 {{name}}: {{#if (eq type 'int')}}number{{else}}{{#if (eq type 'uuid')}}string{{else}}string{{/if}}{{/if}};
 {{else}}
 {{#if (eq type 'uuid')}}

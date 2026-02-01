@@ -1,9 +1,9 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards } from '@nestjs/common';
 import { PatientNotificationService } from '../services/PatientNotification.service';
 import { CreatePatientNotificationDto } from '../dtos/create-patientnotification.dto';
-import { JwtAuthGuard } from '../../auth/jwt.guard';
-import { ScopesGuard } from '../../auth/scopes.guard';
-import { Scopes } from '../../auth/scopes.decorator';
+import { JwtAuthGuard } from '../../../auth/jwt.guard';
+import { ScopesGuard } from '../../../auth/scopes.guard';
+import { Scopes } from '../../../auth/scopes.decorator';
 
 @Controller('notifications')
 export class PatientNotificationController {
@@ -47,7 +47,7 @@ return this.service.delete(id);
 // Custom operations
 @Patch('/toggle')
 @UseGuards(JwtAuthGuard, ScopesGuard)
-@Scopes('notifications:toggle')
+@Scopes()
 async Toggle(@Body() body: any) {
 // TODO: Implement operation logic
 return { message: 'Operation Toggle executed' };

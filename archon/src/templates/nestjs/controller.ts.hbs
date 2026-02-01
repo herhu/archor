@@ -1,9 +1,9 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards } from '@nestjs/common';
 import { {{serviceClassName}} } from '{{serviceImportPath}}';
 import { Create{{entity.name}}Dto } from '../dtos/create-{{lower entity.name}}.dto';
-import { JwtAuthGuard } from '../../auth/jwt.guard';
-import { ScopesGuard } from '../../auth/scopes.guard';
-import { Scopes } from '../../auth/scopes.decorator';
+import { JwtAuthGuard } from '../../../auth/jwt.guard';
+import { ScopesGuard } from '../../../auth/scopes.guard';
+import { Scopes } from '../../../auth/scopes.decorator';
 
 @Controller('{{service.route}}')
 export class {{controllerClassName}} {
@@ -12,7 +12,7 @@ constructor(private readonly service: {{serviceClassName}}) {}
 {{#if crud.create}}
 @Post()
 @UseGuards(JwtAuthGuard, ScopesGuard)
-@Scopes('{{domainKey}}:write')
+@Scopes({{#each crudScopes.create}}'{{this}}'{{#unless @last}}, {{/unless}}{{/each}})
 async create(@Body() dto: Create{{entity.name}}Dto) {
 return this.service.create(dto);
 }
@@ -21,7 +21,7 @@ return this.service.create(dto);
 {{#if crud.findAll}}
 @Get()
 @UseGuards(JwtAuthGuard, ScopesGuard)
-@Scopes('{{domainKey}}:read')
+@Scopes({{#each crudScopes.findAll}}'{{this}}'{{#unless @last}}, {{/unless}}{{/each}})
 async findAll() {
 return this.service.findAll();
 }
@@ -30,7 +30,7 @@ return this.service.findAll();
 {{#if crud.findOne}}
 @Get(':id')
 @UseGuards(JwtAuthGuard, ScopesGuard)
-@Scopes('{{domainKey}}:read')
+@Scopes({{#each crudScopes.findOne}}'{{this}}'{{#unless @last}}, {{/unless}}{{/each}})
 async findOne(@Param('id') id: string) {
 return this.service.findOne(id);
 }
@@ -39,7 +39,7 @@ return this.service.findOne(id);
 {{#if crud.update}}
 @Patch(':id')
 @UseGuards(JwtAuthGuard, ScopesGuard)
-@Scopes('{{domainKey}}:write')
+@Scopes({{#each crudScopes.update}}'{{this}}'{{#unless @last}}, {{/unless}}{{/each}})
 async update(@Param('id') id: string, @Body() dto: any) {
 return this.service.update(id, dto);
 }
@@ -48,7 +48,7 @@ return this.service.update(id, dto);
 {{#if crud.delete}}
 @Delete(':id')
 @UseGuards(JwtAuthGuard, ScopesGuard)
-@Scopes('{{domainKey}}:write')
+@Scopes({{#each crudScopes.delete}}'{{this}}'{{#unless @last}}, {{/unless}}{{/each}})
 async delete(@Param('id') id: string) {
 return this.service.delete(id);
 }
@@ -59,8 +59,7 @@ return this.service.delete(id);
 @{{nestjsMethod method}}('{{path}}')
 {{#if authRequired}}
 @UseGuards(JwtAuthGuard, ScopesGuard)
-@Scopes({{#if authz.scopesAll}}{{#each authz.scopesAll}}'{{this}}'{{#unless @last}},
-{{/unless}}{{/each}}{{else}}'{{../domainKey}}:{{#if (eq method 'GET')}}read{{else}}write{{/if}}'{{/if}})
+@Scopes({{#each effectiveScopes}}'{{this}}'{{#unless @last}}, {{/unless}}{{/each}})
 {{/if}}
 async {{name}}({{#if (eq method 'GET')}}{{else}}{{#if (eq method 'DELETE')}}{{else}}@Body() body: any{{/if}}{{/if}}) {
 // TODO: Implement operation logic
