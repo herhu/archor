@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards } from '@nestjs/common';
-import { PatientNotificationServiceService } from '../services/PatientNotificationService.service';
+import { PatientNotificationService } from '../services/PatientNotification.service';
 import { CreatePatientNotificationDto } from '../dtos/create-patientnotification.dto';
 import { JwtAuthGuard } from '../../auth/jwt.guard';
 import { ScopesGuard } from '../../auth/scopes.guard';
@@ -7,7 +7,7 @@ import { Scopes } from '../../auth/scopes.decorator';
 
 @Controller('notifications')
 export class PatientNotificationController {
-constructor(private readonly service: PatientNotificationServiceService) {}
+constructor(private readonly service: PatientNotificationService) {}
 
 @Post()
 @UseGuards(JwtAuthGuard, ScopesGuard)

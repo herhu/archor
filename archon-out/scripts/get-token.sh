@@ -30,5 +30,5 @@ echo "$RESPONSE"
 exit 1
 fi
 
-echo "export TOKEN=$TOKEN"
+echo "export TOKEN=\"$TOKEN\""
 echo "Token exported to environment variable TOKEN"

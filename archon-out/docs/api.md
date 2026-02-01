@@ -132,7 +132,7 @@ curl -X PATCH "{{baseUrl}}/notifications/toggle" \
 ### GET `/notifications/status`
 
 **Auth:** No
-**Required scope:** patient:read
+**Required scope:** -
 **Description:** Operation: Status
 
 ```bash

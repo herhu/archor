@@ -5,7 +5,7 @@ import { PatientNotification } from '../entities/PatientNotification.entity';
 import { CreatePatientNotificationDto } from '../dtos/create-patientnotification.dto';
 
 @Injectable()
-export class PatientNotificationServiceService {
+export class  {
 constructor(
 @InjectRepository(PatientNotification)
 private repo: Repository<PatientNotification>,

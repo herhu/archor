@@ -5,7 +5,7 @@ import { {{entity.name}} } from '../entities/{{entity.name}}.entity';
 import { Create{{entity.name}}Dto } from '../dtos/create-{{lower entity.name}}.dto';
 
 @Injectable()
-export class {{service.name}}Service {
+export class {{serviceClassName}} {
 constructor(
 @InjectRepository({{entity.name}})
 private repo: Repository<{{entity.name}}>,

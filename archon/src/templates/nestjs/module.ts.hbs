@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 {{#each services}}
-import { {{this}}Service } from './services/{{this}}.service';
+import { {{className}} } from '{{importPath}}';
 {{/each}}
 {{#each controllers}}
-import { {{this}} } from './controllers/{{this}}.controller';
+import { {{className}} } from '{{importPath}}';
 {{/each}}
 {{#each entities}}
 import { {{this}} } from './entities/{{this}}.entity';
@@ -20,12 +20,12 @@ TypeOrmModule.forFeature([
 ],
 controllers: [
 {{#each controllers}}
-{{this}},
+{{className}},
 {{/each}}
 ],
 providers: [
 {{#each services}}
-{{this}}Service,
+{{className}},
 {{/each}}
 ],
 })

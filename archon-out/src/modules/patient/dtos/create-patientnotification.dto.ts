@@ -1,6 +1,6 @@
 export class CreatePatientNotificationDto {
 customerId: string;
 priority: number;
-meta: string;
+meta: any;
 enabled: boolean;
 }

@@ -1,7 +1,8 @@
 export class Create{{entity.name}}Dto {
 {{#each entity.fields}}
 {{#unless primary}}
-{{name}}: {{#if (eq type 'boolean')}}boolean{{else}}{{#if (eq type 'int')}}number{{else}}string{{/if}}{{/if}};
+{{name}}: {{#if (eq type 'boolean')}}boolean{{else}}{{#if (eq type 'int')}}number{{else}}{{#if (eq type
+'json')}}any{{else}}string{{/if}}{{/if}}{{/if}};
 {{/unless}}
 {{/each}}
 }

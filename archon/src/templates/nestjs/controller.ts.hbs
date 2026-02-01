@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards } from '@nestjs/common';
-import { {{service.name}}Service } from '../services/{{service.name}}.service';
+import { {{serviceClassName}} } from '{{serviceImportPath}}';
 import { Create{{entity.name}}Dto } from '../dtos/create-{{lower entity.name}}.dto';
 import { JwtAuthGuard } from '../../auth/jwt.guard';
 import { ScopesGuard } from '../../auth/scopes.guard';
@@ -7,7 +7,7 @@ import { Scopes } from '../../auth/scopes.decorator';
 
 @Controller('{{service.route}}')
 export class {{controllerClassName}} {
-constructor(private readonly service: {{service.name}}Service) {}
+constructor(private readonly service: {{serviceClassName}}) {}
 
 {{#if crud.create}}
 @Post()

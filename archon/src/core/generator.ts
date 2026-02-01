@@ -44,37 +44,6 @@ export async function generateApp(spec: DesignSpec, outDir: string, dryRun: bool
     await generateScripts(spec, outDir, templatesDir, dryRun);
 }
 
-async function generateScripts(spec: DesignSpec, outDir: string, tplDir: string, dryRun: boolean) {
-    const scriptsDir = path.join(outDir, 'scripts');
-    // Ensure scripts dir exists (handled by writeArtifact if file, but cleaner to be explicit if we were doing mkdir, but writeArtifact handles it)
-
-    const tokenUrl = spec.crossCutting?.auth?.jwt?.issuer ? `${spec.crossCutting.auth.jwt.issuer}/oauth/token` : 'YOUR_TOKEN_URL';
-
-    const getTokenTpl = await fs.readFile(path.join(tplDir, 'scripts/get-token.sh.hbs'), 'utf-8');
-    const getTokenContent = Handlebars.compile(getTokenTpl)({
-        tokenUrl,
-        clientId: 'YOUR_CLIENT_ID',
-        clientSecret: 'YOUR_CLIENT_SECRET',
-        audience: spec.crossCutting?.auth?.jwt?.audience ?? 'YOUR_AUDIENCE',
-        scope: 'openid profile' // Default
-    });
-
-    const curlTpl = await fs.readFile(path.join(tplDir, 'scripts/curl.sh.hbs'), 'utf-8');
-
-    await writeArtifact(path.join(scriptsDir, 'get-token.sh'), getTokenContent, dryRun);
-    await writeArtifact(path.join(scriptsDir, 'curl.sh'), curlTpl, dryRun);
-
-    // Make executable if not dry run
-    if (!dryRun) {
-        try {
-            await fs.chmod(path.join(scriptsDir, 'get-token.sh'), '755');
-            await fs.chmod(path.join(scriptsDir, 'curl.sh'), '755');
-        } catch (e) {
-            // Ignore chmod errors on windows or race conditions
-        }
-    }
-}
-
 async function generateScaffold(spec: DesignSpec, outDir: string, tplDir: string, dryRun: boolean) {
     // package.json
     const pkgTpl = await fs.readFile(path.join(tplDir, 'nestjs/package.json.hbs'), 'utf-8');
@@ -100,7 +69,8 @@ async function generateScaffold(spec: DesignSpec, outDir: string, tplDir: string
     await writeArtifact(path.join(outDir, 'src/main.ts'), mainTpl, dryRun);
 
     const appModuleTpl = await fs.readFile(path.join(tplDir, 'nestjs/app.module.ts.hbs'), 'utf-8');
-    // Need to gather all modules to import them. Using key for cleaner paths/names.
+
+    // Module Imports context
     const moduleImports = spec.domains.map(d => ({
         className: d.key.charAt(0).toUpperCase() + d.key.slice(1) + 'Module',
         importPath: `./modules/${d.key}/${d.key}.module`,
@@ -111,18 +81,48 @@ async function generateScaffold(spec: DesignSpec, outDir: string, tplDir: string
     await writeArtifact(path.join(outDir, 'src/app.module.ts'), appModuleContent, dryRun);
 }
 
+function normalizeService(service: Service) {
+    const baseName = service.name.replace(/Service$/, '');
+
+    // Service
+    const serviceClassName = `${baseName}Service`;
+    const serviceFileName = `${baseName}.service`; // No extension
+
+    // Controller
+    const controllerClassName = `${baseName}Controller`;
+    const controllerFileName = `${baseName}.controller`; // No extension
+
+    return {
+        baseName,
+        serviceClassName,
+        serviceFileName,
+        controllerClassName,
+        controllerFileName,
+        importPathService: `./services/${serviceFileName}`,
+        importPathController: `./controllers/${controllerFileName}`
+    };
+}
+
 async function generateDomain(domain: Domain, outDir: string, tplDir: string, dryRun: boolean) {
     const domainKebab = domain.key;
     const domainDir = path.join(outDir, 'src/modules', domainKebab);
+
+    // Normalize services
+    const normalizedServices = domain.services.map(s => normalizeService(s));
 
     // Module file
     const moduleTpl = await fs.readFile(path.join(tplDir, 'nestjs/module.ts.hbs'), 'utf-8');
     const moduleContent = Handlebars.compile(moduleTpl)({
         domainName: domain.name,
-        // Use consistent naming
         moduleClassName: domain.key.charAt(0).toUpperCase() + domain.key.slice(1) + 'Module',
-        controllers: domain.services.map(s => s.name.replace(/Service$/, '') + 'Controller'),
-        services: domain.services.map(s => s.name),
+        controllers: normalizedServices.map(s => ({
+            className: s.controllerClassName,
+            importPath: s.importPathController
+        })),
+        services: normalizedServices.map(s => ({
+            className: s.serviceClassName,
+            importPath: s.importPathService
+        })),
         entities: domain.entities.map(e => e.name)
     });
     await writeArtifact(path.join(domainDir, `${domainKebab}.module.ts`), moduleContent, dryRun);
@@ -142,8 +142,13 @@ async function generateDomain(domain: Domain, outDir: string, tplDir: string, dr
             relatedEntity = domain.entities.find(e => e.name === service.entity) || relatedEntity;
         }
 
-        const content = Handlebars.compile(serviceTpl)({ service, entity: relatedEntity });
-        await writeArtifact(path.join(domainDir, 'services', `${service.name}.service.ts`), content, dryRun);
+        const norm = normalizeService(service);
+        const content = Handlebars.compile(serviceTpl)({
+            service,
+            serviceClassName: norm.serviceClassName,
+            entity: relatedEntity
+        });
+        await writeArtifact(path.join(domainDir, 'services', `${norm.serviceFileName}.ts`), content, dryRun);
     }
 
     // Controllers
@@ -161,27 +166,27 @@ async function generateDomain(domain: Domain, outDir: string, tplDir: string, dr
             delete: service.crud?.includes('delete'),
         };
 
-        // Prepare operations with pre-calculated flags
         const operations = service.operations?.map(op => ({
             ...op,
-            authRequired: op.authz?.required !== false, // Default true
+            authRequired: op.authz?.required !== false,
         }));
 
-        const controllerBaseName = service.name.replace(/Service$/, '');
-        const controllerClassName = `${controllerBaseName}Controller`;
+        const norm = normalizeService(service);
 
         const content = Handlebars.compile(controllerTpl)({
             service,
-            controllerClassName,
+            controllerClassName: norm.controllerClassName,
+            serviceClassName: norm.serviceClassName,
+            serviceImportPath: `../services/${norm.serviceFileName}`,
             entity: relatedEntity,
             domainKey: domain.key,
             crud: crudFlags,
             operations: operations
         });
-        await writeArtifact(path.join(domainDir, 'controllers', `${controllerBaseName}.controller.ts`), content, dryRun);
+        await writeArtifact(path.join(domainDir, 'controllers', `${norm.controllerFileName}.ts`), content, dryRun);
     }
 
-    // DTOs (Simplified generic DTO for now)
+    // DTOs
     const dtoTpl = await fs.readFile(path.join(tplDir, 'nestjs/dto.ts.hbs'), 'utf-8');
     for (const entity of domain.entities) {
         const content = Handlebars.compile(dtoTpl)({ entity });
@@ -219,8 +224,36 @@ async function generateReadme(spec: DesignSpec, outDir: string, tplDir: string, 
     await writeArtifact(path.join(outDir, 'README.md'), content, dryRun);
 }
 
+// 6. Generate Scripts
+async function generateScripts(spec: DesignSpec, outDir: string, tplDir: string, dryRun: boolean) {
+    const scriptsDir = path.join(outDir, 'scripts');
 
-// --- DOCS GENERATOR (Implementing prompt-17 logic) ---
+    const tokenUrl = spec.crossCutting?.auth?.jwt?.issuer ? `${spec.crossCutting.auth.jwt.issuer}/oauth/token` : 'YOUR_TOKEN_URL';
+
+    const getTokenTpl = await fs.readFile(path.join(tplDir, 'scripts/get-token.sh.hbs'), 'utf-8');
+    const getTokenContent = Handlebars.compile(getTokenTpl)({
+        tokenUrl,
+        clientId: 'YOUR_CLIENT_ID',
+        clientSecret: 'YOUR_CLIENT_SECRET',
+        audience: spec.crossCutting?.auth?.jwt?.audience ?? 'YOUR_AUDIENCE',
+        scope: 'openid profile'
+    });
+
+    const curlTpl = await fs.readFile(path.join(tplDir, 'scripts/curl.sh.hbs'), 'utf-8');
+
+    await writeArtifact(path.join(scriptsDir, 'get-token.sh'), getTokenContent, dryRun);
+    await writeArtifact(path.join(scriptsDir, 'curl.sh'), curlTpl, dryRun);
+
+    if (!dryRun) {
+        try {
+            await fs.chmod(path.join(scriptsDir, 'get-token.sh'), '755');
+            await fs.chmod(path.join(scriptsDir, 'curl.sh'), '755');
+        } catch (e) { }
+    }
+}
+
+
+// --- DOCS GENERATOR ---
 
 async function generateDocs(spec: DesignSpec, outDir: string, tplDir: string, dryRun: boolean) {
     const docsDir = path.join(outDir, 'docs');
@@ -247,11 +280,10 @@ function buildEndpoints(spec: DesignSpec) {
         const domainKey = d.key;
         const entity = d.entities[0];
         const bodyCreate = entity ? exampleBodyForCrud(entity) : undefined;
-        // Simplified update body same as create
         const bodyUpdate = bodyCreate;
 
         for (const s of d.services) {
-            const route = s.route; // e.g. 'notifications' -> /notifications
+            const route = s.route;
             const crud = new Set(s.crud ?? []);
 
             if (crud.has('create')) {
@@ -310,13 +342,19 @@ function buildEndpoints(spec: DesignSpec) {
             // Operations
             for (const op of s.operations ?? []) {
                 const scopesAll = op.authz?.scopesAll ?? [];
-                const scope = scopesAll.length ? scopesAll.join(', ') : `${domainKey}:${op.method === 'GET' ? 'read' : 'write'}`;
+                let scope = scopesAll.length ? scopesAll.join(', ') : `${domainKey}:${op.method === 'GET' ? 'read' : 'write'}`;
                 const method = op.method;
                 const path = `/${route}${op.path}`;
+                const authRequired = op.authz?.required !== false;
+
+                if (!authRequired) {
+                    scope = '-';
+                }
+
                 const ep = {
                     method,
                     path,
-                    authRequired: op.authz?.required !== false, // default true
+                    authRequired,
                     scope,
                     description: `Operation: ${op.name}`,
                     body: method === 'GET' ? undefined : (op.request?.schemaRef ? { "example": "TODO schema ref" } : undefined)
@@ -352,7 +390,6 @@ function exampleBodyForCrud(entity: Entity) {
     for (const f of entity?.fields ?? []) {
         const name = f.name;
         if (name === entity.primaryKey) continue;
-        // skip created/updated
 
         switch (f.type) {
             case "boolean":
