@@ -2,9 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
-{{#each moduleNames}}
-import { {{capitalize this}}Module } from './modules/{{kebab this}}/{{kebab this}}.module';
-{{/each}}
+import { PatientModule } from './modules/patient/patient.module';
 
 @Module({
 imports: [
@@ -16,9 +14,7 @@ entities: [__dirname + '/**/*.entity{.ts,.js}'],
 synchronize: true, // DEV only
 }),
 AuthModule,
-{{#each moduleNames}}
-{{capitalize this}}Module,
-{{/each}}
+PatientModule,
 ],
 controllers: [],
 providers: [],

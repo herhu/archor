@@ -83,7 +83,7 @@ async function generateDomain(domain: Domain, outDir: string, tplDir: string) {
     // Services
     const serviceTpl = await fs.readFile(path.join(tplDir, 'nestjs/service.ts.hbs'), 'utf-8');
     for (const service of domain.services) {
-        const relatedEntity = domain.entities[0]; // Simplified: assume first entity is main
+        const relatedEntity = domain.entities[0]; // Simplified
         const content = Handlebars.compile(serviceTpl)({ service, entity: relatedEntity });
         await writeArtifact(path.join(domainDir, 'services', `${service.name}.service.ts`), content);
     }
@@ -92,7 +92,21 @@ async function generateDomain(domain: Domain, outDir: string, tplDir: string) {
     const controllerTpl = await fs.readFile(path.join(tplDir, 'nestjs/controller.ts.hbs'), 'utf-8');
     for (const service of domain.services) {
         const relatedEntity = domain.entities[0]; // Simplified
-        const content = Handlebars.compile(controllerTpl)({ service, entity: relatedEntity, domainKey: domain.key });
+        const crudFlags = {
+            create: service.crud?.includes('create'),
+            findAll: service.crud?.includes('findAll'),
+            findOne: service.crud?.includes('findOne'),
+            update: service.crud?.includes('update'),
+            delete: service.crud?.includes('delete'),
+        };
+
+        const content = Handlebars.compile(controllerTpl)({
+            service,
+            entity: relatedEntity,
+            domainKey: domain.key,
+            crud: crudFlags,
+            operations: service.operations
+        });
         await writeArtifact(path.join(domainDir, 'controllers', `${service.name}.controller.ts`), content);
     }
 
@@ -118,6 +132,14 @@ async function generateAuth(spec: DesignSpec, outDir: string, tplDir: string) {
     // jwt guard
     const jwtGuardTpl = await fs.readFile(path.join(tplDir, 'nestjs/auth/jwt.guard.ts.hbs'), 'utf-8');
     await writeArtifact(path.join(authDir, 'jwt.guard.ts'), jwtGuardTpl);
+
+    // scopes decorator
+    const scopesDecTpl = await fs.readFile(path.join(tplDir, 'nestjs/auth/scopes.decorator.ts.hbs'), 'utf-8');
+    await writeArtifact(path.join(authDir, 'scopes.decorator.ts'), scopesDecTpl);
+
+    // scopes guard
+    const scopesGuardTpl = await fs.readFile(path.join(tplDir, 'nestjs/auth/scopes.guard.ts.hbs'), 'utf-8');
+    await writeArtifact(path.join(authDir, 'scopes.guard.ts'), scopesGuardTpl);
 }
 
 
@@ -130,7 +152,7 @@ async function generateDocs(spec: DesignSpec, outDir: string, tplDir: string) {
     const apiTpl = await fs.readFile(path.join(tplDir, 'docs/api.md.hbs'), 'utf-8');
     const content = Handlebars.compile(apiTpl)({
         projectName: spec.name,
-        baseUrl: 'http://localhost:3000', // Default
+        baseUrl: '{{baseUrl}}', // Literal placeholder for Postman compatibility
         token: '{{token}}',
         tokenUrl: '{{tokenUrl}}',
         clientId: '{{clientId}}',

@@ -2,38 +2,67 @@ import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards } from '@n
 import { {{service.name}}Service } from '../services/{{service.name}}.service';
 import { Create{{entity.name}}Dto } from '../dtos/create-{{lower entity.name}}.dto';
 import { JwtAuthGuard } from '../../auth/jwt.guard';
+import { ScopesGuard } from '../../auth/scopes.guard';
+import { Scopes } from '../../auth/scopes.decorator';
 
 @Controller('{{service.route}}')
 export class {{service.name}}Controller {
 constructor(private readonly service: {{service.name}}Service) {}
 
+{{#if crud.create}}
 @Post()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, ScopesGuard)
+@Scopes('{{domainKey}}:write')
 async create(@Body() dto: Create{{entity.name}}Dto) {
 return this.service.create(dto);
 }
+{{/if}}
 
+{{#if crud.findAll}}
 @Get()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, ScopesGuard)
+@Scopes('{{domainKey}}:read')
 async findAll() {
 return this.service.findAll();
 }
+{{/if}}
 
+{{#if crud.findOne}}
 @Get(':id')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, ScopesGuard)
+@Scopes('{{domainKey}}:read')
 async findOne(@Param('id') id: string) {
 return this.service.findOne(id);
 }
+{{/if}}
 
+{{#if crud.update}}
 @Patch(':id')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, ScopesGuard)
+@Scopes('{{domainKey}}:write')
 async update(@Param('id') id: string, @Body() dto: any) {
 return this.service.update(id, dto);
 }
+{{/if}}
 
+{{#if crud.delete}}
 @Delete(':id')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, ScopesGuard)
+@Scopes('{{domainKey}}:write')
 async delete(@Param('id') id: string) {
 return this.service.delete(id);
 }
+{{/if}}
+
+// Custom operations
+{{#each operations}}
+@{{capitalize method}}('{{path}}')
+@UseGuards(JwtAuthGuard, ScopesGuard)
+@Scopes({{#if authz.scopesAll}}'{{authz.scopesAll}}'{{else}}'{{../domainKey}}:{{#if (eq method
+'GET')}}read{{else}}write{{/if}}'{{/if}})
+async {{name}}(@Body() body: any) {
+// TODO: Implement operation logic
+return { message: 'Operation {{name}} executed' };
+}
+{{/each}}
 }

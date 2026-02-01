@@ -10,7 +10,7 @@ I have implemented **Archon**, the CLI tool that turns a `DesignSpec` into a pro
 ## 2. Capabilities
 ### Backend Scaffolding
 - Generates a full NestJS project (`package.json`, `tsconfig.json`, `main.ts`, `app.module.ts`).
-- Wires up TypeORM with Postgres credentials from `.env`.
+- **Database**: Configured to use `DATABASE_URL` environment variable for simple connection string management.
 
 ### Module Generation
 - For each domain in the spec, it creates:
@@ -18,14 +18,19 @@ I have implemented **Archon**, the CLI tool that turns a `DesignSpec` into a pro
   - `services/*.service.ts` (CRUD logic)
   - `controllers/*.controller.ts` (API endpoints + Auth guards)
   - `dtos/*.dto.ts` (Data Transfer Objects)
+- **Conditional CRUD**: Only generates endpoints specified in the spec's `crud` array.
 
-### Authentication (Prompt-10 Implementation)
+### Authentication & Authorization
 - **Zero-dependency verification** using `jose`.
+- **Scope Enforcement**:
+  - `JwtAuthGuard`: Extracts and normalizes scopes/permissions from token.
+  - `ScopesGuard`: Enforces required scopes using `@Scopes()` decorator.
+  - Controllers are automatically decorated with default scopes (e.g., `domain:read`, `domain:write`) or custom overrides (`authz.scopesAll`).
 - Supports both **JWKS** (Auth0/OIDC) and **Shared Secret**.
-- Enforces scoped access (e.g., `patient:read`, `patient:write`) in documentation.
 
 ### Documentation (Prompt-17 Implementation)
 - Generates `docs/api.md` with **ready-to-paste Curl examples**.
+- **Postman Ready**: uses `{{baseUrl}}` and `{{token}}` variables directly.
 - Includes a token helper command for client credentials flow.
 
 ## 3. Verification Result
@@ -45,29 +50,27 @@ archon/
 ├── package.json
 ├── .env.example
 ├── src/
-│   ├── app.module.ts              # Automatically imports PatientModule
+│   ├── app.module.ts              # Automatically imports PatientModule & uses DATABASE_URL
 │   ├── auth/
-│   │   ├── jwt.guard.ts           # The "jose" implementation
+│   │   ├── jwt.guard.ts           # The "jose" implementation + scope extraction
+│   │   ├── scopes.guard.ts        # Enforces @Scopes()
+│   │   ├── scopes.decorator.ts    # Decorator definition
 │   │   └── jwt.config.ts
 │   └── modules/
 │       └── patient/
-│           ├── controllers/       # PatientNotificationController
+│           ├── controllers/       # PatientNotificationController w/ @Scopes
 │           ├── services/
 │           └── entities/
 └── docs/
-    └── api.md                     # Markdown with Curl commands
+    └── api.md                     # Markdown with Curl commands & {{baseUrl}}
 ```
 
-**Sample API Doc Output (Verified):**
-```bash
-curl -X POST "{{baseUrl}}/notifications" \
-  -H "Authorization: Bearer {{token}}" \
-  -H "Content-Type: application/json" \
-  -d '{
-  "customerId": "example_customerId",
-  "enabled": true,
-  "portalUrl": "example_portalUrl"
-}'
+**Sample Controller Output (Verified):**
+```typescript
+@Patch('/toggle')
+@UseGuards(JwtAuthGuard, ScopesGuard)
+@Scopes('notifications:toggle')
+async Toggle(@Body() body: any) { ... }
 ```
 
 ## 4. How to use it
