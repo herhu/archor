@@ -7,32 +7,31 @@ I have implemented **Archon**, the CLI tool that turns a `DesignSpec` into a pro
 - **Generators (`archon/src/core/generator.ts`)**: Engine + Handlebars helpers.
 - **Templates**: `src/templates/` (NestJS, Auth, Docs).
 
-## 2. Capabilities & Fixes (V1.3 Final Polish)
+## 2. Capabilities & Fixes (V1.4 Production Hardening)
 ### Correctness & Security (P0)
-- **Strict JWT**: Now **fails fast** (throws Error) if `JWT_ISSUER`, `JWT_AUDIENCE`, or `JWT_JWKS_URI` (in jwks mode) are missing.
-- **Custom Ops**: Correctly handles `@Body()` conditional rendering. `GET/DELETE` operations no longer accept a body argument.
-- **Validation**:
-  - **Schema**: Enforced `additionalProperties: false`, strict Enums for methods/types.
-  - **Semantic**: Verified `service.entity` references exist in domain.
+- **Schema Hardening**: "LLM-proof" validation using AJV.
+  - **Regex Enforcement**: Routes (no leading slash), Paths (leading slash required), Scopes (format `domain:action`).
+  - **Semantic Integrity**: Fails if domain has multiple entities but service doesn't specify `service.entity`.
+- **Strict JWT**: Fails fast if configuration is missing.
 - **Strict Scope**: `ScopesGuard` explicitly throws `ForbiddenException`.
 
 ### Product Quality (P1)
-- **Formatting**: Controller templates now properly indented. Custom operation arguments are clean (no whitespace artifacts).
-- **Type Safety**:
-  - **Entities**: Mapped `int` -> `number`, `uuid` -> `@Column({ type: 'uuid' })`, `json` -> `@Column({ type: 'json' })`.
-  - **Reference**: Services now resolve specific entities via `service.entity`, fixing the `entities[0]` assumption.
-- **Runtime Validation**: Application now enables `ValidationPipe` globally (`whitelist: true`) in `main.ts`.
+- **Formatting**: Controller clean indentation.
+- **Type Safety**: Improved Entity typing (`json`, `uuid`, `number`).
+- **DX**:
+  - **README.md**: Auto-generated with Setup, Run, Test, and Auth instructions.
+  - **ValidationPipe**: Global validation enabled by default.
 
 ## 3. Verification Result
-Tests run in `archon-out/` using `sample-spec.json` (updated with `json` fields and `GET` ops).
+Tests run in `archon-out/` using `sample-spec.json` (valid) and `ambiguous-spec.json` (invalid).
 
 1.  **Build**: `npm run build` (Clean).
-2.  **Generate**: `archon generate -s sample-spec.json` (Success).
-3.  **Inspect**:
-    -   `PatientNotification.entity.ts`: `meta: any` is `json` type. `id` is `uuid`.
-    -   `PatientNotificationService.controller.ts`: `Toggle` accepts body, `Status` (GET) does not.
-    -   `main.ts`: `app.useGlobalPipes(...)` present.
-    -   `jwt.config.ts`: Verified throw logic.
+2.  **Validation Test**: `ambiguous-spec.json` correctly FAILED validation.
+3.  **Generation Test**: `sample-spec.json` SUCCEEDED.
+4.  **Inspect**:
+    -   `README.md`: Created and populated.
+    -   `PatientNotification.entity.ts`: Correct typing.
+    -   `PatientNotificationService.controller.ts`: Correct conditional `@Body`.
 
 ## 4. How to use it
 1.  **Build**: `cd archon && npm install && npm run build`

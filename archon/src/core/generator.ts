@@ -36,6 +36,9 @@ export async function generateApp(spec: DesignSpec, outDir: string, dryRun: bool
 
     // 4. Generate Docs
     await generateDocs(spec, outDir, templatesDir, dryRun);
+
+    // 5. Generate README
+    await generateReadme(spec, outDir, templatesDir, dryRun);
 }
 
 async function generateScaffold(spec: DesignSpec, outDir: string, tplDir: string, dryRun: boolean) {
@@ -157,6 +160,12 @@ async function generateAuth(spec: DesignSpec, outDir: string, tplDir: string, dr
     // scopes guard
     const scopesGuardTpl = await fs.readFile(path.join(tplDir, 'nestjs/auth/scopes.guard.ts.hbs'), 'utf-8');
     await writeArtifact(path.join(authDir, 'scopes.guard.ts'), scopesGuardTpl, dryRun);
+}
+
+async function generateReadme(spec: DesignSpec, outDir: string, tplDir: string, dryRun: boolean) {
+    const readmeTpl = await fs.readFile(path.join(tplDir, 'nestjs/README.md.hbs'), 'utf-8');
+    const content = Handlebars.compile(readmeTpl)({ projectName: spec.name });
+    await writeArtifact(path.join(outDir, 'README.md'), content, dryRun);
 }
 
 

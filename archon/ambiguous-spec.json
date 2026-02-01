@@ -1,0 +1,39 @@
+{
+    "name": "Invalid App",
+    "domains": [
+        {
+            "name": "Multi Entity Domain",
+            "key": "multi",
+            "entities": [
+                {
+                    "name": "EntityA",
+                    "primaryKey": "id",
+                    "fields": [
+                        {
+                            "name": "id",
+                            "type": "uuid",
+                            "primary": true
+                        }
+                    ]
+                },
+                {
+                    "name": "EntityB",
+                    "primaryKey": "id",
+                    "fields": [
+                        {
+                            "name": "id",
+                            "type": "uuid",
+                            "primary": true
+                        }
+                    ]
+                }
+            ],
+            "services": [
+                {
+                    "name": "AmbiguousService",
+                    "route": "ambiguous"
+                }
+            ]
+        }
+    ]
+}

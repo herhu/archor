@@ -6,7 +6,7 @@ const ajv = new Ajv({ allErrors: true });
 // Basic checking, will generate a comprehensive schema later if needed.
 const specSchema = {
     type: "object",
-    additionalProperties: false,
+    required: ["name", "domains"],
     properties: {
         name: { type: "string", minLength: 1 },
         crossCutting: {
@@ -33,6 +33,7 @@ const specSchema = {
         },
         domains: {
             type: "array",
+            minItems: 1,
             items: {
                 type: "object",
                 additionalProperties: false,
@@ -41,6 +42,7 @@ const specSchema = {
                     key: { type: "string", pattern: "^[a-z0-9-]+$" },
                     entities: {
                         type: "array",
+                        minItems: 1,
                         items: {
                             type: "object",
                             additionalProperties: false,
@@ -49,6 +51,7 @@ const specSchema = {
                                 primaryKey: { type: "string" },
                                 fields: {
                                     type: "array",
+                                    minItems: 1,
                                     items: {
                                         type: "object",
                                         additionalProperties: false,
@@ -67,12 +70,13 @@ const specSchema = {
                     },
                     services: {
                         type: "array",
+                        minItems: 1,
                         items: {
                             type: "object",
                             additionalProperties: false,
                             properties: {
                                 name: { type: "string" },
-                                route: { type: "string" },
+                                route: { type: "string", pattern: "^[a-z0-9-]+$" },
                                 entity: { type: "string" },
                                 crud: {
                                     type: "array",
@@ -86,13 +90,16 @@ const specSchema = {
                                         properties: {
                                             name: { type: "string" },
                                             method: { enum: ["GET", "POST", "PUT", "PATCH", "DELETE"] },
-                                            path: { type: "string" },
+                                            path: { type: "string", pattern: "^/.*" },
                                             authz: {
                                                 type: "object",
                                                 additionalProperties: false,
                                                 properties: {
                                                     required: { type: "boolean" },
-                                                    scopesAll: { type: "array", items: { type: "string" } }
+                                                    scopesAll: {
+                                                        type: "array",
+                                                        items: { type: "string", pattern: "^[a-z0-9-]+:[a-z]+$" }
+                                                    }
                                                 }
                                             },
                                             request: {
@@ -114,8 +121,7 @@ const specSchema = {
                 required: ["name", "key"]
             }
         }
-    },
-    required: ["name", "domains"]
+    }
 };
 
 export function validateSpecSchema(spec: any): string[] {
@@ -145,7 +151,12 @@ export function validateSpecSemantic(spec: DesignSpec): string[] {
 
         // Check authz scopes are arrays
         // Validate service entity references
+        // Validate service entity references
         d.services.forEach(s => {
+            if (d.entities.length > 1 && !s.entity) {
+                errors.push(`Service ${s.name} inside domain ${d.name} is ambiguous. Domain has multiple entities, so service.entity must be specified.`);
+            }
+
             if (s.entity) {
                 const entityExists = d.entities.find(e => e.name === s.entity);
                 if (!entityExists) {
