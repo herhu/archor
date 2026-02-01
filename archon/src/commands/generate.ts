@@ -28,7 +28,6 @@ export async function generateCommand(options: { spec: string, dryRun?: boolean 
 
         console.log(chalk.green(`Loaded spec: ${spec.name}`));
 
-        // Default output directory is the current directory
         const outDir = process.cwd();
 
         await generateApp(spec, outDir, options.dryRun);
