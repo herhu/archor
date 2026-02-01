@@ -60,7 +60,7 @@ return this.service.delete(id);
 @UseGuards(JwtAuthGuard, ScopesGuard)
 @Scopes({{#if authz.scopesAll}}{{#each authz.scopesAll}}'{{this}}'{{#unless @last}},
 {{/unless}}{{/each}}{{else}}'{{../domainKey}}:{{#if (eq method 'GET')}}read{{else}}write{{/if}}'{{/if}})
-async {{name}}(@Body() body: any) {
+async {{name}}({{#if (eq method 'GET')}}{{else}}{{#if (eq method 'DELETE')}}{{else}}@Body() body: any{{/if}}{{/if}}) {
 // TODO: Implement operation logic
 return { message: 'Operation {{name}} executed' };
 }

@@ -51,8 +51,11 @@ curl -X POST "{{baseUrl}}/notifications" \
   -H "Content-Type: application/json" \
   -d '{
   "customerId": "example_customerId",
-  "enabled": true,
-  "portalUrl": "example_portalUrl"
+  "priority": 1,
+  "meta": {
+    "example": true
+  },
+  "enabled": true
 }'
 ```
 
@@ -93,8 +96,11 @@ curl -X PATCH "{{baseUrl}}/notifications/:id" \
   -H "Content-Type: application/json" \
   -d '{
   "customerId": "example_customerId",
-  "enabled": true,
-  "portalUrl": "example_portalUrl"
+  "priority": 1,
+  "meta": {
+    "example": true
+  },
+  "enabled": true
 }'
 ```
 
@@ -120,5 +126,16 @@ curl -X DELETE "{{baseUrl}}/notifications/:id" \
 ```bash
 curl -X PATCH "{{baseUrl}}/notifications/toggle" \
   -H "Authorization: Bearer {{token}}"
+```
+
+
+### GET `/notifications/status`
+
+**Auth:** No
+**Required scope:** patient:read
+**Description:** Operation: Status
+
+```bash
+curl -X GET "{{baseUrl}}/notifications/status"
 ```
 

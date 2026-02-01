@@ -35,6 +35,7 @@ export interface Field {
 export interface Service {
     name: string; // e.g. 'PatientNotificationService'
     route: string; // e.g. 'notifications'
+    entity?: string; // e.g. 'PatientNotification' (explicit reference)
     crud?: ('create' | 'findAll' | 'findOne' | 'update' | 'delete')[];
     operations?: Operation[];
 }

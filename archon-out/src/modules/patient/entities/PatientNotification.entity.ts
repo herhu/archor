@@ -8,10 +8,13 @@ id: string;
 @Column({ nullable: false })
 customerId: string;
 
-@Column({ nullable: false })
-enabled: boolean;
+@Column({ nullable: true })
+priority: number;
+
+@Column({ type: 'json', nullable: true })
+meta: any;
 
 @Column({ nullable: false })
-portalUrl: string;
+enabled: boolean;
 
 }

@@ -16,9 +16,7 @@ const jwksUri = process.env.JWT_JWKS_URI || '';
 const secret = process.env.JWT_SECRET || '';
 
 if (!issuer || !audience) {
-// throw new Error('JWT_ISSUER and JWT_AUDIENCE must be set');
-// WARN: Relaxed for initial scaffold to allow run without strict env
-console.warn('JWT_ISSUER and JWT_AUDIENCE must be set in .env');
+throw new Error('JWT_ISSUER and JWT_AUDIENCE must be set in .env');
 }
 
 if (jwksUri) {
@@ -30,5 +28,9 @@ return { issuer, audience, mode: 'secret', secret };
 }
 
 // Default to nothing or error
-return { issuer, audience, mode: 'jwks', jwksUri: '' };
+if (jwksUri) {
+return { issuer, audience, mode: 'jwks', jwksUri };
+}
+
+throw new Error('JWT_JWKS_URI must be set when using JWKS mode');
 }

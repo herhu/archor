@@ -1,8 +1,17 @@
 {
     "name": "Validation App",
+    "crossCutting": {
+        "auth": {
+            "jwt": {
+                "issuer": "https://auth.example.com",
+                "audience": "https://api.example.com",
+                "jwksUri": "https://auth.example.com/.well-known/jwks.json"
+            }
+        }
+    },
     "domains": [
         {
-            "name": "Patient",
+            "name": "Patient Domain",
             "key": "patient",
             "entities": [
                 {
@@ -19,20 +28,27 @@
                             "type": "string"
                         },
                         {
-                            "name": "enabled",
-                            "type": "boolean"
+                            "name": "priority",
+                            "type": "int",
+                            "nullable": true
                         },
                         {
-                            "name": "portalUrl",
-                            "type": "string"
+                            "name": "meta",
+                            "type": "json",
+                            "nullable": true
+                        },
+                        {
+                            "name": "enabled",
+                            "type": "boolean"
                         }
                     ]
                 }
             ],
             "services": [
                 {
-                    "name": "PatientNotification",
+                    "name": "PatientNotificationService",
                     "route": "notifications",
+                    "entity": "PatientNotification",
                     "crud": [
                         "create",
                         "findAll",
@@ -50,19 +66,18 @@
                                     "notifications:toggle"
                                 ]
                             }
+                        },
+                        {
+                            "name": "Status",
+                            "method": "GET",
+                            "path": "/status",
+                            "authz": {
+                                "required": false
+                            }
                         }
                     ]
                 }
             ]
         }
-    ],
-    "crossCutting": {
-        "auth": {
-            "jwt": {
-                "issuer": "https://auth.example.com/",
-                "audience": "validation-app",
-                "jwksUri": "https://auth.example.com/.well-known/jwks.json"
-            }
-        }
-    }
+    ]
 }

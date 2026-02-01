@@ -7,8 +7,19 @@ export class {{entity.name}} {
 @PrimaryGeneratedColumn('{{type}}')
 {{name}}: string;
 {{else}}
+{{#if (eq type 'uuid')}}
+@Column({ type: 'uuid', nullable: {{#if nullable}}true{{else}}false{{/if}} })
+{{name}}: string;
+{{else}}
+{{#if (eq type 'json')}}
+@Column({ type: 'json', nullable: {{#if nullable}}true{{else}}false{{/if}} })
+{{name}}: any;
+{{else}}
 @Column({ nullable: {{#if nullable}}true{{else}}false{{/if}} })
-{{name}}: {{#if (eq type 'boolean')}}boolean{{else}}{{#if (eq type 'int')}}number{{else}}string{{/if}}{{/if}};
+{{name}}: {{#if (eq type 'boolean')}}boolean{{else}}{{#if (eq type 'int')}}number{{else}}{{#if (eq type
+'float')}}number{{else}}string{{/if}}{{/if}}{{/if}};
+{{/if}}
+{{/if}}
 {{/if}}
 
 {{/each}}

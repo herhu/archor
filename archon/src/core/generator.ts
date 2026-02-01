@@ -93,7 +93,11 @@ async function generateDomain(domain: Domain, outDir: string, tplDir: string, dr
     // Services
     const serviceTpl = await fs.readFile(path.join(tplDir, 'nestjs/service.ts.hbs'), 'utf-8');
     for (const service of domain.services) {
-        const relatedEntity = domain.entities[0]; // Simplified
+        let relatedEntity = domain.entities[0];
+        if (service.entity) {
+            relatedEntity = domain.entities.find(e => e.name === service.entity) || relatedEntity;
+        }
+
         const content = Handlebars.compile(serviceTpl)({ service, entity: relatedEntity });
         await writeArtifact(path.join(domainDir, 'services', `${service.name}.service.ts`), content, dryRun);
     }
@@ -101,7 +105,10 @@ async function generateDomain(domain: Domain, outDir: string, tplDir: string, dr
     // Controllers
     const controllerTpl = await fs.readFile(path.join(tplDir, 'nestjs/controller.ts.hbs'), 'utf-8');
     for (const service of domain.services) {
-        const relatedEntity = domain.entities[0]; // Simplified
+        let relatedEntity = domain.entities[0];
+        if (service.entity) {
+            relatedEntity = domain.entities.find(e => e.name === service.entity) || relatedEntity;
+        }
         const crudFlags = {
             create: service.crud?.includes('create'),
             findAll: service.crud?.includes('findAll'),
