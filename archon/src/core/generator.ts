@@ -71,6 +71,10 @@ async function generateScaffold(spec: DesignSpec, outDir: string, tplDir: string
     });
     await writeArtifact(path.join(outDir, '.env.example'), envContent, dryRun);
 
+    // .gitignore
+    const gitignoreTpl = await fs.readFile(path.join(tplDir, 'nestjs/gitignore.hbs'), 'utf-8');
+    await writeArtifact(path.join(outDir, '.gitignore'), gitignoreTpl, dryRun);
+
     // Create src content
     const mainTpl = await fs.readFile(path.join(tplDir, 'nestjs/main.ts.hbs'), 'utf-8');
     await writeArtifact(path.join(outDir, 'src/main.ts'), mainTpl, dryRun);
