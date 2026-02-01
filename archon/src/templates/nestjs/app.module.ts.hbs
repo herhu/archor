@@ -1,0 +1,30 @@
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthModule } from './auth/auth.module';
+{{#each moduleNames}}
+import { {{capitalize this}}Module } from './modules/{{kebab this}}/{{kebab this}}.module';
+{{/each}}
+
+@Module({
+imports: [
+ConfigModule.forRoot({ isGlobal: true }),
+TypeOrmModule.forRoot({
+type: 'postgres',
+host: process.env.DATABASE_HOST,
+port: parseInt(process.env.DATABASE_PORT || '5432', 10),
+username: process.env.DATABASE_USER,
+password: process.env.DATABASE_PASSWORD,
+database: process.env.DATABASE_NAME,
+entities: [__dirname + '/**/*.entity{.ts,.js}'],
+synchronize: true, // DEV only
+}),
+AuthModule,
+{{#each moduleNames}}
+{{capitalize this}}Module,
+{{/each}}
+],
+controllers: [],
+providers: [],
+})
+export class AppModule {}

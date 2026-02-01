@@ -1,0 +1,35 @@
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { {{entity.name}} } from '../entities/{{entity.name}}.entity';
+import { Create{{entity.name}}Dto } from '../dtos/create-{{lower entity.name}}.dto';
+
+@Injectable()
+export class {{service.name}}Service {
+constructor(
+@InjectRepository({{entity.name}})
+private repo: Repository<{{entity.name}}>,
+    ) {}
+
+    async create(dto: Create{{entity.name}}Dto): Promise<{{entity.name}}> {
+        const entity = this.repo.create(dto);
+        return this.repo.save(entity);
+        }
+
+        async findAll(): Promise<{{entity.name}}[]> {
+            return this.repo.find();
+            }
+
+            async findOne(id: string): Promise<{{entity.name}} | null> {
+                return this.repo.findOne({ where: { id: id as any } });
+                }
+
+                async update(id: string, dto: any): Promise<{{entity.name}}> {
+                    await this.repo.update(id, dto);
+                    return this.repo.findOne({ where: { id: id as any } }) as Promise<{{entity.name}}>;
+                        }
+
+                        async delete(id: string): Promise<void> {
+                            await this.repo.delete(id);
+                            }
+                            }

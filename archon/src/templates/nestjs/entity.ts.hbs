@@ -1,0 +1,15 @@
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+
+@Entity()
+export class {{entity.name}} {
+{{#each entity.fields}}
+{{#if primary}}
+@PrimaryGeneratedColumn('{{type}}')
+{{name}}: string;
+{{else}}
+@Column({ nullable: {{#if nullable}}true{{else}}false{{/if}} })
+{{name}}: {{#if (eq type 'boolean')}}boolean{{else}}{{#if (eq type 'int')}}number{{else}}string{{/if}}{{/if}};
+{{/if}}
+
+{{/each}}
+}

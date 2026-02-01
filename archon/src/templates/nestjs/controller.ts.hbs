@@ -1,0 +1,39 @@
+import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import { {{service.name}}Service } from '../services/{{service.name}}.service';
+import { Create{{entity.name}}Dto } from '../dtos/create-{{lower entity.name}}.dto';
+import { JwtAuthGuard } from '../../auth/jwt.guard';
+
+@Controller('{{service.route}}')
+export class {{service.name}}Controller {
+constructor(private readonly service: {{service.name}}Service) {}
+
+@Post()
+@UseGuards(JwtAuthGuard)
+async create(@Body() dto: Create{{entity.name}}Dto) {
+return this.service.create(dto);
+}
+
+@Get()
+@UseGuards(JwtAuthGuard)
+async findAll() {
+return this.service.findAll();
+}
+
+@Get(':id')
+@UseGuards(JwtAuthGuard)
+async findOne(@Param('id') id: string) {
+return this.service.findOne(id);
+}
+
+@Patch(':id')
+@UseGuards(JwtAuthGuard)
+async update(@Param('id') id: string, @Body() dto: any) {
+return this.service.update(id, dto);
+}
+
+@Delete(':id')
+@UseGuards(JwtAuthGuard)
+async delete(@Param('id') id: string) {
+return this.service.delete(id);
+}
+}

@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>System Architect — Product Foundations in 24–48 Hours</title>
+  <meta name="description"
+    content="I turn ideas into real product foundations — system architecture delivered in 24–48 hours. Clear, safe, production-ready backend foundation with docs, diagrams, OpenAPI, Postman, and curl." />
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --panel: #101824;
+      --panel2: #0f1621;
+      --text: #e7eef8;
+      --muted: #a9b7c9;
+      --brand: #7c5cff;
+      --brand2: #35d0ff;
+      --line: rgba(255, 255, 255, .08);
+      --shadow: 0 16px 48px rgba(0, 0, 0, .35);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 800px at 20% 0%, rgba(124, 92, 255, .18), transparent 60%),
+        radial-gradient(1200px 800px at 90% 10%, rgba(53, 208, 255, .12), transparent 55%),
+        var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+    }
+
+    a {
+      color: inherit
+    }
+
+    .container {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 24px
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      border: 1px solid var(--line);
+      background: rgba(16, 24, 36, .6);
+      backdrop-filter: blur(10px);
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 14px;
+      z-index: 10;
+    }
+
+    .logo {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      font-weight: 700;
+      letter-spacing: .2px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--brand), var(--brand2));
+      box-shadow: 0 0 0 4px rgba(124, 92, 255, .14);
+    }
+
+    .nav a {
+      text-decoration: none;
+      color: var(--muted);
+      font-weight: 600;
+      padding: 8px 10px;
+      border-radius: 10px;
+    }
+
+    .nav a:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, .06)
+    }
+
+    .cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(124, 92, 255, .95), rgba(53, 208, 255, .9));
+      color: #06101a;
+      font-weight: 800;
+      text-decoration: none;
+      box-shadow: 0 14px 36px rgba(124, 92, 255, .25);
+    }
+
+    .cta small {
+      opacity: .8;
+      font-weight: 800
+    }
+
+    .hero {
+      padding: 34px 0 18px
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    @media (max-width: 920px) {
+      .grid {
+        grid-template-columns: 1fr
+      }
+
+      .nav {
+        position: static
+      }
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      background: rgba(16, 24, 36, .55);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .headline {
+      font-size: clamp(28px, 4vw, 44px);
+      line-height: 1.08;
+      margin: 0 0 10px;
+      letter-spacing: -.6px;
+    }
+
+    .subhead {
+      color: var(--muted);
+      font-size: clamp(14px, 1.6vw, 18px);
+      margin: 0 0 18px;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 16px 0 0
+    }
+
+    .chip {
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: rgba(15, 22, 33, .7);
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .section {
+      padding: 16px 0
+    }
+
+    h2 {
+      font-size: 20px;
+      margin: 0 0 10px;
+      letter-spacing: -.2px;
+    }
+
+    h3 {
+      margin: 0 0 8px;
+      font-size: 16px;
+      color: var(--text);
+    }
+
+    p {
+      margin: 10px 0;
+      color: var(--muted)
+    }
+
+    ul {
+      margin: 10px 0 0;
+      padding-left: 18px;
+      color: var(--muted)
+    }
+
+    li {
+      margin: 6px 0
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    @media (max-width: 720px) {
+      .split {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .pill {
+      display: inline-flex;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(15, 22, 33, .75);
+      color: var(--muted);
+    }
+
+    .pill b {
+      color: var(--text)
+    }
+
+    .highlight {
+      color: var(--text);
+      background: linear-gradient(135deg, rgba(124, 92, 255, .20), rgba(53, 208, 255, .12));
+      border: 1px solid rgba(124, 92, 255, .22);
+      padding: 14px 14px;
+      border-radius: 16px;
+    }
+
+    .pricing {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    @media (max-width: 920px) {
+      .pricing {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .price {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(15, 22, 33, .75);
+    }
+
+    .price .tag {
+      color: var(--muted);
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: .3px;
+      text-transform: uppercase
+    }
+
+    .price .amt {
+      font-size: 28px;
+      font-weight: 900;
+      margin: 6px 0 2px
+    }
+
+    .price .desc {
+      margin: 0;
+      color: var(--muted)
+    }
+
+    .footer {
+      margin-top: 22px;
+      padding: 18px 0 26px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .contact {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .ghost {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 800;
+      background: rgba(255, 255, 255, .04);
+    }
+
+    .ghost:hover {
+      background: rgba(255, 255, 255, .07)
+    }
+
+    .kbd {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+      padding: 2px 6px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: rgba(0, 0, 0, .25);
+      color: var(--text);
+    }
+
+    .small {
+      font-size: 13px
+    }
+
+    .muted {
+      color: var(--muted)
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header class="nav">
+      <div class="logo">
+        <span class="dot" aria-hidden="true"></span>
+        <span>System Architect</span>
+      </div>
+
+      <nav class="muted">
+        <a href="#how">How it works</a>
+        <a href="#deliverables">Deliverables</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#about">About</a>
+      </nav>
+
+      <a class="cta" href="#contact">
+        Start a project <small>→</small>
+      </a>
+    </header>
+
+    <main>
+      <!-- HERO -->
+      <section class="hero" id="top">
+        <div class="grid">
+          <div class="card">
+            <h1 class="headline">I turn ideas into real product foundations.</h1>
+            <p class="subhead">
+              <b>System architecture delivered in 24–48 hours</b> — clear structure, secure access rules,
+              clean API, documentation, diagrams, OpenAPI, Postman, and curl examples.
+            </p>
+
+            <div class="split">
+              <div class="pill"><b>Outcome:</b> runnable backend foundation</div>
+              <div class="pill"><b>Speed:</b> days, not weeks</div>
+              <div class="pill"><b>Security:</b> JWT + scopes + (optional) roles</div>
+              <div class="pill"><b>Docs:</b> OpenAPI + Postman + curl</div>
+            </div>
+
+            <div class="chips">
+              <span class="chip">No chaos</span>
+              <span class="chip">No guessing</span>
+              <span class="chip">One accountable owner</span>
+              <span class="chip">You own everything</span>
+            </div>
+
+            <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:18px;">
+              <a class="cta" href="#contact">Tell me your idea <small>→</small></a>
+              <a class="ghost" href="#deliverables">See what you get</a>
+            </div>
+
+            <p class="small muted" style="margin-top:14px;">
+              Tip: if you’re non-technical, just describe the problem and who it’s for. I’ll structure the rest.
+            </p>
+          </div>
+
+          <aside class="card">
+            <h2>🏠 The 30-second explanation</h2>
+            <div class="highlight">
+              <p style="margin:0;color:var(--text);">
+                Imagine you want to build a house.<br /><br />
+                ChatGPT is like asking a random builder to give you some bricks and sketches.<br /><br />
+                What I build is a <b>ready-to-live house blueprint</b> — with electricity, plumbing, safety rules,
+                and clear instructions — so a real construction team can build it <b>without surprises</b>.<br /><br />
+                Companies pay me because I save them <b>time, money, and mistakes</b>.
+              </p>
+            </div>
+
+            <div style="margin-top:14px;">
+              <h3>🤖 Do you use AI?</h3>
+              <p class="muted" style="margin:0;">
+                Yes — as a tool. AI helps me move faster, but the architecture is intentional and validated.
+                You’re paying for reliability and responsibility, not random output.
+              </p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- PROBLEM / SOLUTION -->
+      <section class="section">
+        <div class="grid">
+          <div class="card">
+            <h2>❓ The problem</h2>
+            <p>
+              Most products fail before they’re built — not because the idea is bad, but because the foundation is
+              messy:
+            </p>
+            <ul>
+              <li>unclear permissions and security</li>
+              <li>developers build in different directions</li>
+              <li>data structure changes every week</li>
+              <li>the project becomes expensive to fix</li>
+            </ul>
+          </div>
+
+          <div class="card">
+            <h2>✅ The solution</h2>
+            <p>
+              I deliver a professional foundation that developers can extend safely. Think:
+              <b>blueprint + working base</b>.
+            </p>
+            <p class="muted">
+              You don’t need a “team” — you need one architect accountable for the system.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- HOW IT WORKS -->
+      <section class="section" id="how">
+        <div class="card">
+          <h2>🚀 How it works</h2>
+          <div class="split">
+            <div class="pill"><b>1)</b> You describe your idea</div>
+            <div class="pill"><b>2)</b> I design the system foundation</div>
+            <div class="pill"><b>3)</b> You receive the deliverable bundle</div>
+            <div class="pill"><b>4)</b> Your team builds on it immediately</div>
+          </div>
+          <p class="muted" style="margin-top:12px;">
+            Delivery is structured, consistent, and reviewable. No vendor lock-in.
+          </p>
+        </div>
+      </section>
+
+      <!-- DELIVERABLES -->
+      <section class="section" id="deliverables">
+        <div class="card">
+          <h2>📦 What you get</h2>
+          <div class="split">
+            <div>
+              <h3>Working foundation</h3>
+              <ul>
+                <li>runnable backend scaffold</li>
+                <li>secure login + permissions</li>
+                <li>clean API structure</li>
+                <li>database-ready data model</li>
+              </ul>
+            </div>
+            <div>
+              <h3>Professional delivery kit</h3>
+              <ul>
+                <li>Swagger/OpenAPI docs (with scopes)</li>
+                <li>Postman collection + environment</li>
+                <li>curl examples (including token helper)</li>
+                <li>architecture docs + diagrams</li>
+              </ul>
+            </div>
+          </div>
+
+          <p class="muted" style="margin-top:12px;">
+            Default scopes are domain-based like <span class="kbd">notifications:read</span> and
+            <span class="kbd">notifications:write</span>, and custom operations can have scope overrides.
+          </p>
+        </div>
+      </section>
+
+      <!-- PRICING -->
+      <section class="section" id="pricing">
+        <div class="card">
+          <h2>💰 Pricing (simple & transparent)</h2>
+          <div class="pricing">
+            <div class="price">
+              <div class="tag">Small foundation</div>
+              <div class="amt">$299+</div>
+              <p class="desc">One domain, clean CRUD, basic auth + docs.</p>
+            </div>
+            <div class="price">
+              <div class="tag">Full product foundation</div>
+              <div class="amt">$499</div>
+              <p class="desc">Multiple domains, scopes, OpenAPI, Postman, diagrams.</p>
+            </div>
+            <div class="price">
+              <div class="tag">Complex systems</div>
+              <div class="amt">$999+</div>
+              <p class="desc">Custom flows, advanced constraints, deeper security and structure.</p>
+            </div>
+          </div>
+          <p class="muted" style="margin-top:12px;">
+            No subscriptions. You own everything.
+          </p>
+        </div>
+      </section>
+
+      <!-- ABOUT -->
+      <section class="section" id="about">
+        <div class="card">
+          <h2>👤 About</h2>
+          <p>
+            I’m a <b>System Architect and Senior Engineer</b>. I design the structure behind products:
+            how data flows, how access is controlled, and how systems stay clean as they grow.
+          </p>
+          <p class="muted">
+            I don’t sell hype or “random AI output”. I deliver consistent foundations you can trust.
+            AI and automation are tools — architecture stays human and accountable.
+          </p>
+        </div>
+      </section>
+
+      <!-- CONTACT -->
+      <section class="section" id="contact">
+        <div class="card">
+          <h2>📩 Ready to build it right?</h2>
+          <p class="muted">
+            Send a short description of your idea (what it does, who it’s for, and the key features).
+            I’ll respond with a clear plan and next steps.
+          </p>
+
+          <div class="contact">
+            <a class="cta"
+              href="mailto:you@example.com?subject=Product%20Foundation%20Request&body=Idea%3A%0AUsers%3A%0AKey%20features%3A%0ATimeline%3A">
+              Email me <small>→</small>
+            </a>
+            <a class="ghost" href="#top">Back to top</a>
+            <span class="muted small">Replace <span class="kbd">you@example.com</span> with your email.</span>
+          </div>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <div>© <span id="year"></span> System Architect · All rights reserved</div>
+        <div class="muted">Built for clarity · No lock-in · One accountable owner</div>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+
+</html>

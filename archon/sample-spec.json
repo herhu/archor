@@ -1,0 +1,68 @@
+{
+    "name": "Validation App",
+    "domains": [
+        {
+            "name": "Patient",
+            "key": "patient",
+            "entities": [
+                {
+                    "name": "PatientNotification",
+                    "primaryKey": "id",
+                    "fields": [
+                        {
+                            "name": "id",
+                            "type": "uuid",
+                            "primary": true
+                        },
+                        {
+                            "name": "customerId",
+                            "type": "string"
+                        },
+                        {
+                            "name": "enabled",
+                            "type": "boolean"
+                        },
+                        {
+                            "name": "portalUrl",
+                            "type": "string"
+                        }
+                    ]
+                }
+            ],
+            "services": [
+                {
+                    "name": "PatientNotification",
+                    "route": "notifications",
+                    "crud": [
+                        "create",
+                        "findAll",
+                        "findOne",
+                        "update",
+                        "delete"
+                    ],
+                    "operations": [
+                        {
+                            "name": "Toggle",
+                            "method": "PATCH",
+                            "path": "/toggle",
+                            "authz": {
+                                "scopesAll": [
+                                    "notifications:toggle"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "crossCutting": {
+        "auth": {
+            "jwt": {
+                "issuer": "https://auth.example.com/",
+                "audience": "validation-app",
+                "jwksUri": "https://auth.example.com/.well-known/jwks.json"
+            }
+        }
+    }
+}

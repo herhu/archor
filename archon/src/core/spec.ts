@@ -1,0 +1,53 @@
+export interface DesignSpec {
+    name: string;
+    domains: Domain[];
+    crossCutting?: {
+        auth?: {
+            jwt?: {
+                issuer: string;
+                audience: string;
+                jwksUri?: string;
+            };
+        };
+    };
+}
+
+export interface Domain {
+    name: string;
+    key: string; // e.g., 'patient-notification'
+    entities: Entity[];
+    services: Service[];
+}
+
+export interface Entity {
+    name: string; // e.g. 'PatientNotification'
+    primaryKey?: string;
+    fields: Field[];
+}
+
+export interface Field {
+    name: string;
+    type: string; // 'string', 'boolean', 'uuid', 'int', 'float', 'timestamp', 'json'
+    primary?: boolean;
+    nullable?: boolean;
+}
+
+export interface Service {
+    name: string; // e.g. 'PatientNotificationService'
+    route: string; // e.g. 'notifications'
+    crud?: ('create' | 'findAll' | 'findOne' | 'update' | 'delete')[];
+    operations?: Operation[];
+}
+
+export interface Operation {
+    name: string;
+    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+    path: string; // e.g. '/settings'
+    authz?: {
+        required?: boolean;
+        scopesAll?: string[];
+    };
+    request?: {
+        schemaRef?: string;
+    };
+}
