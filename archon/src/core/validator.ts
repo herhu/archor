@@ -141,13 +141,7 @@ export function validateSpecSemantic(spec: DesignSpec): string[] {
         }
         domainKeys.add(d.key);
 
-        // Normalize routes (ensure they behave well in semantic sense)
-        d.services.forEach(s => {
-            if (s.route.startsWith('/')) {
-                // Should ideally warn or strip. 
-                // For v1 we accept it but maybe warn.
-            }
-        });
+
 
         // Check authz scopes are arrays
         // Validate service entity references

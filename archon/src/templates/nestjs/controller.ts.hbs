@@ -6,7 +6,7 @@ import { ScopesGuard } from '../../auth/scopes.guard';
 import { Scopes } from '../../auth/scopes.decorator';
 
 @Controller('{{service.route}}')
-export class {{service.name}}Controller {
+export class {{controllerClassName}} {
 constructor(private readonly service: {{service.name}}Service) {}
 
 {{#if crud.create}}

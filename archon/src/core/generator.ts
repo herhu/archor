@@ -7,7 +7,7 @@ import { writeArtifact } from './io';
 // Register helpers
 Handlebars.registerHelper('lower', (str) => str.toLowerCase());
 Handlebars.registerHelper('capitalize', (str) => str.charAt(0).toUpperCase() + str.slice(1));
-Handlebars.registerHelper('kebab', (str) => str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase());
+Handlebars.registerHelper('kebab', (str) => str.replace(/\s+/g, '-').replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase());
 Handlebars.registerHelper('eq', (a, b) => a === b);
 Handlebars.registerHelper('nestjsMethod', (method) => {
     switch (String(method).toUpperCase()) {
@@ -39,6 +39,40 @@ export async function generateApp(spec: DesignSpec, outDir: string, dryRun: bool
 
     // 5. Generate README
     await generateReadme(spec, outDir, templatesDir, dryRun);
+
+    // 6. Generate Scripts
+    await generateScripts(spec, outDir, templatesDir, dryRun);
+}
+
+async function generateScripts(spec: DesignSpec, outDir: string, tplDir: string, dryRun: boolean) {
+    const scriptsDir = path.join(outDir, 'scripts');
+    // Ensure scripts dir exists (handled by writeArtifact if file, but cleaner to be explicit if we were doing mkdir, but writeArtifact handles it)
+
+    const tokenUrl = spec.crossCutting?.auth?.jwt?.issuer ? `${spec.crossCutting.auth.jwt.issuer}/oauth/token` : 'YOUR_TOKEN_URL';
+
+    const getTokenTpl = await fs.readFile(path.join(tplDir, 'scripts/get-token.sh.hbs'), 'utf-8');
+    const getTokenContent = Handlebars.compile(getTokenTpl)({
+        tokenUrl,
+        clientId: 'YOUR_CLIENT_ID',
+        clientSecret: 'YOUR_CLIENT_SECRET',
+        audience: spec.crossCutting?.auth?.jwt?.audience ?? 'YOUR_AUDIENCE',
+        scope: 'openid profile' // Default
+    });
+
+    const curlTpl = await fs.readFile(path.join(tplDir, 'scripts/curl.sh.hbs'), 'utf-8');
+
+    await writeArtifact(path.join(scriptsDir, 'get-token.sh'), getTokenContent, dryRun);
+    await writeArtifact(path.join(scriptsDir, 'curl.sh'), curlTpl, dryRun);
+
+    // Make executable if not dry run
+    if (!dryRun) {
+        try {
+            await fs.chmod(path.join(scriptsDir, 'get-token.sh'), '755');
+            await fs.chmod(path.join(scriptsDir, 'curl.sh'), '755');
+        } catch (e) {
+            // Ignore chmod errors on windows or race conditions
+        }
+    }
 }
 
 async function generateScaffold(spec: DesignSpec, outDir: string, tplDir: string, dryRun: boolean) {
@@ -87,7 +121,7 @@ async function generateDomain(domain: Domain, outDir: string, tplDir: string, dr
         domainName: domain.name,
         // Use consistent naming
         moduleClassName: domain.key.charAt(0).toUpperCase() + domain.key.slice(1) + 'Module',
-        controllers: domain.services.map(s => s.name + 'Controller'),
+        controllers: domain.services.map(s => s.name.replace(/Service$/, '') + 'Controller'),
         services: domain.services.map(s => s.name),
         entities: domain.entities.map(e => e.name)
     });
@@ -131,18 +165,20 @@ async function generateDomain(domain: Domain, outDir: string, tplDir: string, dr
         const operations = service.operations?.map(op => ({
             ...op,
             authRequired: op.authz?.required !== false, // Default true
-            // Pre-calculate scopes string for simpler template? Or keep logic in template?
-            // Let's keep logic in template for now but authRequired is needed.
         }));
+
+        const controllerBaseName = service.name.replace(/Service$/, '');
+        const controllerClassName = `${controllerBaseName}Controller`;
 
         const content = Handlebars.compile(controllerTpl)({
             service,
+            controllerClassName,
             entity: relatedEntity,
             domainKey: domain.key,
             crud: crudFlags,
             operations: operations
         });
-        await writeArtifact(path.join(domainDir, 'controllers', `${service.name}.controller.ts`), content, dryRun);
+        await writeArtifact(path.join(domainDir, 'controllers', `${controllerBaseName}.controller.ts`), content, dryRun);
     }
 
     // DTOs (Simplified generic DTO for now)

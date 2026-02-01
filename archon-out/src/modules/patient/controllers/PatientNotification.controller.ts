@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards } from '@nestjs/common';
-import { PatientNotificationService } from '../services/PatientNotification.service';
+import { PatientNotificationServiceService } from '../services/PatientNotificationService.service';
 import { CreatePatientNotificationDto } from '../dtos/create-patientnotification.dto';
 import { JwtAuthGuard } from '../../auth/jwt.guard';
 import { ScopesGuard } from '../../auth/scopes.guard';
@@ -7,7 +7,7 @@ import { Scopes } from '../../auth/scopes.decorator';
 
 @Controller('notifications')
 export class PatientNotificationController {
-constructor(private readonly service: PatientNotificationService) {}
+constructor(private readonly service: PatientNotificationServiceService) {}
 
 @Post()
 @UseGuards(JwtAuthGuard, ScopesGuard)
@@ -51,5 +51,10 @@ return this.service.delete(id);
 async Toggle(@Body() body: any) {
 // TODO: Implement operation logic
 return { message: 'Operation Toggle executed' };
+}
+@Get('/status')
+async Status() {
+// TODO: Implement operation logic
+return { message: 'Operation Status executed' };
 }
 }
