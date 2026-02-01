@@ -1,17 +1,25 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiOAuth2 } from '@nestjs/swagger';
 import { {{serviceClassName}} } from '{{serviceImportPath}}';
-import { Create{{entity.name}}Dto } from '../dtos/create-{{lower entity.name}}.dto';
+import { Create{{entity.name}}Dto } from '../dtos/create-{{kebab entity.name}}.dto';
 import { JwtAuthGuard } from '../../../auth/jwt.guard';
 import { ScopesGuard } from '../../../auth/scopes.guard';
 import { Scopes } from '../../../auth/scopes.decorator';
+{{#if useRbac}}
+import { RbacGuard } from '../../../auth/rbac.guard';
+{{/if}}
 
+@ApiTags('{{domainKey}}')
+@ApiBearerAuth('bearer')
 @Controller('{{service.route}}')
 export class {{controllerClassName}} {
 constructor(private readonly service: {{serviceClassName}}) {}
 
 {{#if crud.create}}
 @Post()
-@UseGuards(JwtAuthGuard, ScopesGuard)
+@ApiOperation({ summary: 'Create {{entity.name}}' })
+@ApiOAuth2(['{{domainKey}}:write'])
+@UseGuards(JwtAuthGuard, ScopesGuard{{#if useRbac}}, RbacGuard{{/if}})
 @Scopes({{#each crudScopes.create}}'{{this}}'{{#unless @last}}, {{/unless}}{{/each}})
 async create(@Body() dto: Create{{entity.name}}Dto) {
 return this.service.create(dto);
@@ -20,7 +28,9 @@ return this.service.create(dto);
 
 {{#if crud.findAll}}
 @Get()
-@UseGuards(JwtAuthGuard, ScopesGuard)
+@ApiOperation({ summary: 'List {{entity.name}}s' })
+@ApiOAuth2(['{{domainKey}}:read'])
+@UseGuards(JwtAuthGuard, ScopesGuard{{#if useRbac}}, RbacGuard{{/if}})
 @Scopes({{#each crudScopes.findAll}}'{{this}}'{{#unless @last}}, {{/unless}}{{/each}})
 async findAll() {
 return this.service.findAll();
@@ -29,27 +39,33 @@ return this.service.findAll();
 
 {{#if crud.findOne}}
 @Get(':id')
-@UseGuards(JwtAuthGuard, ScopesGuard)
+@ApiOperation({ summary: 'Get {{entity.name}}' })
+@ApiOAuth2(['{{domainKey}}:read'])
+@UseGuards(JwtAuthGuard, ScopesGuard{{#if useRbac}}, RbacGuard{{/if}})
 @Scopes({{#each crudScopes.findOne}}'{{this}}'{{#unless @last}}, {{/unless}}{{/each}})
-async findOne(@Param('id') id: string) {
+async findOne(@Param('id') id: {{idType}}) {
 return this.service.findOne(id);
 }
 {{/if}}
 
 {{#if crud.update}}
 @Patch(':id')
-@UseGuards(JwtAuthGuard, ScopesGuard)
+@ApiOperation({ summary: 'Update {{entity.name}}' })
+@ApiOAuth2(['{{domainKey}}:write'])
+@UseGuards(JwtAuthGuard, ScopesGuard{{#if useRbac}}, RbacGuard{{/if}})
 @Scopes({{#each crudScopes.update}}'{{this}}'{{#unless @last}}, {{/unless}}{{/each}})
-async update(@Param('id') id: string, @Body() dto: any) {
+async update(@Param('id') id: {{idType}}, @Body() dto: any) {
 return this.service.update(id, dto);
 }
 {{/if}}
 
 {{#if crud.delete}}
 @Delete(':id')
-@UseGuards(JwtAuthGuard, ScopesGuard)
+@ApiOperation({ summary: 'Delete {{entity.name}}' })
+@ApiOAuth2(['{{domainKey}}:write'])
+@UseGuards(JwtAuthGuard, ScopesGuard{{#if useRbac}}, RbacGuard{{/if}})
 @Scopes({{#each crudScopes.delete}}'{{this}}'{{#unless @last}}, {{/unless}}{{/each}})
-async delete(@Param('id') id: string) {
+async delete(@Param('id') id: {{idType}}) {
 return this.service.delete(id);
 }
 {{/if}}
@@ -57,8 +73,10 @@ return this.service.delete(id);
 // Custom operations
 {{#each operations}}
 @{{nestjsMethod method}}('{{path}}')
+@ApiOperation({ summary: '{{name}}' })
 {{#if authRequired}}
-@UseGuards(JwtAuthGuard, ScopesGuard)
+@ApiOAuth2([{{#each effectiveScopes}}'{{this}}'{{#unless @last}}, {{/unless}}{{/each}}])
+@UseGuards(JwtAuthGuard, ScopesGuard{{#if ../useRbac}}, RbacGuard{{/if}})
 @Scopes({{#each effectiveScopes}}'{{this}}'{{#unless @last}}, {{/unless}}{{/each}})
 {{/if}}
 async {{name}}({{#if (eq method 'GET')}}{{else}}{{#if (eq method 'DELETE')}}{{else}}@Body() body: any{{/if}}{{/if}}) {

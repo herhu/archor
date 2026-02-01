@@ -21,7 +21,14 @@ Handlebars.registerHelper('nestjsMethod', (method) => {
 });
 
 export async function generateApp(spec: DesignSpec, outDir: string, dryRun: boolean = false) {
-    const templatesDir = path.join(__dirname, '../../src/templates');
+    // Robust template path resolution
+    let templatesDir = path.join(__dirname, '../../src/templates'); // Source mode
+    if (!fs.existsSync(templatesDir)) {
+        templatesDir = path.join(__dirname, '../templates'); // Dist mode (if copied to src/templates)
+    }
+    if (!fs.existsSync(templatesDir)) {
+        templatesDir = path.join(__dirname, '../../templates'); // Dist mode alternative
+    }
 
     // 1. Scaffold Base App
     await generateScaffold(spec, outDir, templatesDir, dryRun);
@@ -86,11 +93,11 @@ function normalizeService(service: Service) {
 
     // Service
     const serviceClassName = `${baseName}Service`;
-    const serviceFileName = `${baseName}.service`; // No extension
+    const serviceFileName = `${kebab(baseName)}.service`; // kebab-case
 
     // Controller
     const controllerClassName = `${baseName}Controller`;
-    const controllerFileName = `${baseName}.controller`; // No extension
+    const controllerFileName = `${kebab(baseName)}.controller`; // kebab-case
 
     return {
         baseName,
@@ -101,6 +108,10 @@ function normalizeService(service: Service) {
         importPathService: `./services/${serviceFileName}`,
         importPathController: `./controllers/${controllerFileName}`
     };
+}
+
+function kebab(str: string) {
+    return str.replace(/\s+/g, '-').replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 }
 
 async function generateDomain(domain: Domain, outDir: string, tplDir: string, dryRun: boolean) {
@@ -123,7 +134,7 @@ async function generateDomain(domain: Domain, outDir: string, tplDir: string, dr
             className: s.serviceClassName,
             importPath: s.importPathService
         })),
-        entities: domain.entities.map(e => e.name)
+        entities: domain.entities.map(e => e.name) // Entities might need import path fix if we change their filenames
     });
     await writeArtifact(path.join(domainDir, `${domainKebab}.module.ts`), moduleContent, dryRun);
 
@@ -131,7 +142,8 @@ async function generateDomain(domain: Domain, outDir: string, tplDir: string, dr
     const entityTpl = await fs.readFile(path.join(tplDir, 'nestjs/entity.ts.hbs'), 'utf-8');
     for (const entity of domain.entities) {
         const content = Handlebars.compile(entityTpl)({ entity });
-        await writeArtifact(path.join(domainDir, 'entities', `${entity.name}.entity.ts`), content, dryRun);
+        const entityFileName = kebab(entity.name);
+        await writeArtifact(path.join(domainDir, 'entities', `${entityFileName}.entity.ts`), content, dryRun);
     }
 
     // Services
@@ -143,10 +155,14 @@ async function generateDomain(domain: Domain, outDir: string, tplDir: string, dr
         }
 
         const norm = normalizeService(service);
+        const idType = relatedEntity.fields.find(f => f.primary)?.type === 'int' ? 'number' : 'string';
+
         const content = Handlebars.compile(serviceTpl)({
             service,
             serviceClassName: norm.serviceClassName,
-            entity: relatedEntity
+            entity: relatedEntity,
+            entityImportPath: `../entities/${kebab(relatedEntity.name)}.entity`,
+            idType
         });
         await writeArtifact(path.join(domainDir, 'services', `${norm.serviceFileName}.ts`), content, dryRun);
     }
@@ -187,10 +203,13 @@ async function generateDomain(domain: Domain, outDir: string, tplDir: string, dr
             serviceClassName: norm.serviceClassName,
             serviceImportPath: `../services/${norm.serviceFileName}`,
             entity: relatedEntity,
+            entityImportPath: `../entities/${kebab(relatedEntity.name)}.entity`, // Pass clean path
             domainKey: domain.key,
             crud: crudFlags,
             crudScopes,
-            operations: operations
+            operations: operations,
+            // Planner-level ID type
+            idType: relatedEntity.fields.find(f => f.primary)?.type === 'int' ? 'number' : 'string'
         });
         await writeArtifact(path.join(domainDir, 'controllers', `${norm.controllerFileName}.ts`), content, dryRun);
     }
@@ -199,7 +218,7 @@ async function generateDomain(domain: Domain, outDir: string, tplDir: string, dr
     const dtoTpl = await fs.readFile(path.join(tplDir, 'nestjs/dto.ts.hbs'), 'utf-8');
     for (const entity of domain.entities) {
         const content = Handlebars.compile(dtoTpl)({ entity });
-        await writeArtifact(path.join(domainDir, 'dtos', `create-${entity.name.toLowerCase()}.dto.ts`), content, dryRun);
+        await writeArtifact(path.join(domainDir, 'dtos', `create-${kebab(entity.name)}.dto.ts`), content, dryRun);
     }
 }
 
@@ -245,7 +264,7 @@ async function generateScripts(spec: DesignSpec, outDir: string, tplDir: string,
         clientId: 'YOUR_CLIENT_ID',
         clientSecret: 'YOUR_CLIENT_SECRET',
         audience: spec.crossCutting?.auth?.jwt?.audience ?? 'YOUR_AUDIENCE',
-        scope: 'openid profile'
+        defaultScopes: spec.crossCutting?.auth?.jwt?.defaultScopes ?? 'openid profile'
     });
 
     const curlTpl = await fs.readFile(path.join(tplDir, 'scripts/curl.sh.hbs'), 'utf-8');

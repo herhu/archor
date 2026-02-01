@@ -1,11 +1,12 @@
 import * as path from 'path';
+import * as fs from 'fs-extra';
 import chalk = require('chalk');
 import { loadSpec } from '../core/io';
 import { DesignSpec } from '../core/spec';
 import { generateApp } from '../core/generator';
 import { validateSpecSchema, validateSpecSemantic } from '../core/validator';
 
-export async function generateCommand(options: { spec: string, dryRun?: boolean, qa?: boolean }) {
+export async function generateCommand(options: { spec: string, out?: string, dryRun?: boolean, qa?: boolean, force?: boolean }) {
     const specPath = path.resolve(process.cwd(), options.spec);
 
     try {
@@ -28,7 +29,18 @@ export async function generateCommand(options: { spec: string, dryRun?: boolean,
 
         console.log(chalk.green(`Loaded spec: ${spec.name}`));
 
-        const outDir = process.cwd();
+        // Default to archon-out if not specified
+        const outDir = path.resolve(process.cwd(), options.out || 'archon-out');
+
+        // Check overwrite safety
+        if (!options.dryRun && !options.force && fs.existsSync(outDir)) {
+            const files = await fs.readdir(outDir);
+            if (files.length > 0) {
+                console.error(chalk.red(`Output directory is not empty: ${outDir}`));
+                console.error(chalk.yellow(`Use --force to overwrite.`));
+                process.exit(1);
+            }
+        }
 
         await generateApp(spec, outDir, options.dryRun);
 

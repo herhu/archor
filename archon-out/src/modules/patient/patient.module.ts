@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PatientNotificationService } from './services/PatientNotification.service';
-import { PatientNotificationController } from './controllers/PatientNotification.controller';
-import { PatientNotification } from './entities/PatientNotification.entity';
+import { PatientNotificationService } from './services/patient-notification.service';
+import { PatientNotificationController } from './controllers/patient-notification.controller';
+import { PatientNotification } from './entities/patient-notification.entity';
 
 @Module({
 imports: [

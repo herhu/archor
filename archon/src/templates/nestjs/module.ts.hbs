@@ -7,7 +7,7 @@ import { {{className}} } from '{{importPath}}';
 import { {{className}} } from '{{importPath}}';
 {{/each}}
 {{#each entities}}
-import { {{this}} } from './entities/{{this}}.entity';
+import { {{this}} } from './entities/{{kebab this}}.entity';
 {{/each}}
 
 @Module({

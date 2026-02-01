@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { {{entity.name}} } from '../entities/{{entity.name}}.entity';
-import { Create{{entity.name}}Dto } from '../dtos/create-{{lower entity.name}}.dto';
+import { {{entity.name}} } from '../entities/{{kebab entity.name}}.entity';
+import { Create{{entity.name}}Dto } from '../dtos/create-{{kebab entity.name}}.dto';
 
 @Injectable()
 export class {{serviceClassName}} {
@@ -20,16 +20,16 @@ private repo: Repository<{{entity.name}}>,
             return this.repo.find();
             }
 
-            async findOne(id: string): Promise<{{entity.name}} | null> {
+            async findOne(id: {{idType}}): Promise<{{entity.name}} | null> {
                 return this.repo.findOne({ where: { id: id as any } });
                 }
 
-                async update(id: string, dto: any): Promise<{{entity.name}}> {
-                    await this.repo.update(id, dto);
+                async update(id: {{idType}}, dto: any): Promise<{{entity.name}}> {
+                    await this.repo.update(id as any, dto);
                     return this.repo.findOne({ where: { id: id as any } }) as Promise<{{entity.name}}>;
                         }
 
-                        async delete(id: string): Promise<void> {
-                            await this.repo.delete(id);
+                        async delete(id: {{idType}}): Promise<void> {
+                            await this.repo.delete(id as any);
                             }
                             }

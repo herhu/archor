@@ -2,22 +2,16 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.loadJwtConfig = loadJwtConfig;
 function loadJwtConfig() {
-    const issuer = process.env.JWT_ISSUER || '';
-    const audience = process.env.JWT_AUDIENCE || '';
-    const jwksUri = process.env.JWT_JWKS_URI || '';
-    const secret = process.env.JWT_SECRET || '';
-    if (!issuer || !audience) {
-        throw new Error('JWT_ISSUER and JWT_AUDIENCE must be set in .env');
-    }
+    const issuer = process.env.JWT_ISSUER ?? '{{jwtIssuer}}';
+    const audience = process.env.JWT_AUDIENCE ?? '{{jwtAudience}}';
+    const jwksUri = process.env.JWT_JWKS_URI;
+    const secret = process.env.JWT_SECRET;
     if (jwksUri) {
         return { issuer, audience, mode: 'jwks', jwksUri };
     }
     if (secret) {
         return { issuer, audience, mode: 'secret', secret };
     }
-    if (jwksUri) {
-        return { issuer, audience, mode: 'jwks', jwksUri };
-    }
-    throw new Error('JWT_JWKS_URI must be set when using JWKS mode');
+    throw new Error('Invalid Auth Config: Set either JWT_JWKS_URI (for remote) or JWT_SECRET (for local/HS256) in .env');
 }
 //# sourceMappingURL=jwt.config.js.map

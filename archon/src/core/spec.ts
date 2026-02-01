@@ -7,6 +7,7 @@ export interface DesignSpec {
                 issuer: string;
                 audience: string;
                 jwksUri?: string;
+                defaultScopes?: string; // Space separated
             };
         };
     };

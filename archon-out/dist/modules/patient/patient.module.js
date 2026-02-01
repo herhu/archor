@@ -9,9 +9,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PatientModule = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
-const PatientNotification_service_1 = require("./services/PatientNotification.service");
-const PatientNotification_controller_1 = require("./controllers/PatientNotification.controller");
-const PatientNotification_entity_1 = require("./entities/PatientNotification.entity");
+const patient_notification_service_1 = require("./services/patient-notification.service");
+const patient_notification_controller_1 = require("./controllers/patient-notification.controller");
+const patient_notification_entity_1 = require("./entities/patient-notification.entity");
 let PatientModule = class PatientModule {
 };
 exports.PatientModule = PatientModule;
@@ -19,14 +19,14 @@ exports.PatientModule = PatientModule = __decorate([
     (0, common_1.Module)({
         imports: [
             typeorm_1.TypeOrmModule.forFeature([
-                PatientNotification_entity_1.PatientNotification,
+                patient_notification_entity_1.PatientNotification,
             ]),
         ],
         controllers: [
-            PatientNotification_controller_1.PatientNotificationController,
+            patient_notification_controller_1.PatientNotificationController,
         ],
         providers: [
-            PatientNotification_service_1.PatientNotificationService,
+            patient_notification_service_1.PatientNotificationService,
         ],
     })
 ], PatientModule);
