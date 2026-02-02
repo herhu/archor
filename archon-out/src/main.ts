@@ -8,6 +8,7 @@ import helmet from "helmet";
 import { AppModule } from "./app.module";
 import { setupSwagger } from "./shared/swagger/swagger";
 import { HttpExceptionFilter } from "./shared/filters/http-exception.filter";
+import { TransformInterceptor } from "./shared/interceptors/transform.interceptor";
 
 function parseOrigins(raw?: string): string[] {
   if (!raw) return [];
@@ -79,6 +80,7 @@ async function bootstrap() {
 
   // Global error shape
   app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalInterceptors(new TransformInterceptor());
 
   // Swagger
   setupSwagger(app);
