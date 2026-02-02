@@ -64,8 +64,9 @@ async function bootstrap() {
   });
 
   // Body size limits (Using NestJS platform adapter, avoiding direct express require)
-  app.useBodyParser("json", { limit: "1mb" });
-  app.useBodyParser("urlencoded", { extended: true, limit: "1mb" });
+  const maxBodySize = process.env.MAX_BODY_SIZE || "1mb";
+  app.useBodyParser("json", { limit: maxBodySize });
+  app.useBodyParser("urlencoded", { extended: true, limit: maxBodySize });
 
   // Validation
   app.useGlobalPipes(
@@ -85,10 +86,9 @@ async function bootstrap() {
   const port = process.env.PORT ? Number(process.env.PORT) : 3000;
   await app.listen(port);
 
-  // eslint-disable-next-line no-console
-  console.log(`API running: http://localhost:${port}/${globalPrefix}`);
-  // eslint-disable-next-line no-console
-  console.log(`Swagger: http://localhost:${port}/docs`);
+  const logger = app.get(PinoLogger);
+  logger.info(`API running: http://localhost:${port}/${globalPrefix}`);
+  logger.info(`Swagger: http://localhost:${port}/docs`);
 }
 
 bootstrap();

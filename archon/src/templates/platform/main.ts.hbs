@@ -66,8 +66,9 @@ const app = await NestFactory.create<NestExpressApplication>(AppModule, {
 
     // Body size limits (Using NestJS platform adapter, avoiding direct express require)
     {{#if platform.maxBodySize}}
-    app.useBodyParser('json', { limit: '{{platform.maxBodySize}}' });
-    app.useBodyParser('urlencoded', { extended: true, limit: '{{platform.maxBodySize}}' });
+    const maxBodySize = process.env.MAX_BODY_SIZE || '{{platform.maxBodySize}}';
+    app.useBodyParser('json', { limit: maxBodySize });
+    app.useBodyParser('urlencoded', { extended: true, limit: maxBodySize });
     {{/if}}
 
     // Validation
@@ -90,11 +91,10 @@ const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     const port = process.env.PORT ? Number(process.env.PORT) : {{port}};
     await app.listen(port);
 
-    // eslint-disable-next-line no-console
-    console.log(`API running: http://localhost:${port}/${globalPrefix}`);
+    const logger = app.get(PinoLogger);
+    logger.info(`API running: http://localhost:${port}/${globalPrefix}`);
     {{#if platform.swagger}}
-    // eslint-disable-next-line no-console
-    console.log(`Swagger: http://localhost:${port}/docs`);
+    logger.info(`Swagger: http://localhost:${port}/docs`);
     {{/if}}
     }
 

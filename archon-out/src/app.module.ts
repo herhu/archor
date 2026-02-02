@@ -1,9 +1,4 @@
-import {
-  Module,
-  NestModule,
-  MiddlewareConsumer,
-  RequestMethod,
-} from "@nestjs/common";
+import { Module, NestModule, MiddlewareConsumer } from "@nestjs/common";
 import { ConfigModule } from "./shared/config/config.module";
 import { ConfigService } from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
@@ -28,16 +23,24 @@ import { PatientModule } from "./modules/patient/patient.module";
         url: configService.get<string>("DATABASE_URL"),
         autoLoadEntities: true,
         synchronize: configService.get<string>("NODE_ENV") !== "production", // Safe default
+        ssl:
+          configService.get<string>("DATABASE_SSL") === "true"
+            ? { rejectUnauthorized: false }
+            : false,
       }),
       inject: [ConfigService],
     }),
 
-    ThrottlerModule.forRoot([
-      {
-        ttl: Number(process.env.RATE_LIMIT_TTL ?? 60),
-        limit: Number(process.env.RATE_LIMIT_MAX ?? 100),
-      },
-    ]),
+    ThrottlerModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => [
+        {
+          ttl: Number(configService.get("RATE_LIMIT_TTL") ?? 60),
+          limit: Number(configService.get("RATE_LIMIT_MAX") ?? 100),
+        },
+      ],
+      inject: [ConfigService],
+    }),
 
     HealthModule,
 
@@ -53,8 +56,6 @@ import { PatientModule } from "./modules/patient/patient.module";
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(CorrelationIdMiddleware)
-      .forRoutes({ path: "*", method: RequestMethod.ALL });
+    consumer.apply(CorrelationIdMiddleware).forRoutes("*");
   }
 }
