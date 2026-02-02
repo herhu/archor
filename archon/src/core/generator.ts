@@ -92,27 +92,39 @@ async function generateScaffold(spec: DesignSpec, outDir: string, tplDir: string
     await writeArtifact(path.join(outDir, 'src/app.module.ts'), appModuleContent, dryRun);
 }
 
+function toKebab(s: string) {
+    return s
+        .replace(/Service$/, '')
+        .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+        .replace(/\s+/g, '-')
+        .toLowerCase();
+}
+
 function normalizeService(service: Service) {
-    const baseName = service.name.replace(/Service$/, '');
+    const baseName = service.name.replace(/Service$/, ''); // PascalCase name
+
+    const fileBase = toKebab(baseName); // kebab-case for filenames
 
     // Service
     const serviceClassName = `${baseName}Service`;
-    const serviceFileName = `${kebab(baseName)}.service`; // kebab-case
+    const serviceFileName = `${fileBase}.service`; // no extension
 
     // Controller
     const controllerClassName = `${baseName}Controller`;
-    const controllerFileName = `${kebab(baseName)}.controller`; // kebab-case
+    const controllerFileName = `${fileBase}.controller`; // no extension
 
     return {
         baseName,
+        fileBase,
         serviceClassName,
         serviceFileName,
         controllerClassName,
         controllerFileName,
         importPathService: `./services/${serviceFileName}`,
-        importPathController: `./controllers/${controllerFileName}`
+        importPathController: `./controllers/${controllerFileName}`,
     };
 }
+
 
 function kebab(str: string) {
     return str.replace(/\s+/g, '-').replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
@@ -147,7 +159,12 @@ async function generateDomain(domain: Domain, outDir: string, tplDir: string, dr
     for (const entity of domain.entities) {
         const content = Handlebars.compile(entityTpl)({ entity });
         const entityFileName = kebab(entity.name);
-        await writeArtifact(path.join(domainDir, 'entities', `${entityFileName}.entity.ts`), content, dryRun);
+        await writeArtifact(
+            path.join(domainDir, 'entities', `${toKebab(entity.name)}.entity.ts`),
+            content,
+            dryRun
+        );
+
     }
 
     // Services
@@ -222,7 +239,12 @@ async function generateDomain(domain: Domain, outDir: string, tplDir: string, dr
     const dtoTpl = await fs.readFile(path.join(tplDir, 'nestjs/dto.ts.hbs'), 'utf-8');
     for (const entity of domain.entities) {
         const content = Handlebars.compile(dtoTpl)({ entity });
-        await writeArtifact(path.join(domainDir, 'dtos', `create-${kebab(entity.name)}.dto.ts`), content, dryRun);
+        await writeArtifact(
+            path.join(domainDir, 'dtos', `create-${toKebab(entity.name)}.dto.ts`),
+            content,
+            dryRun
+        );
+
     }
 }
 
