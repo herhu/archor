@@ -50,6 +50,7 @@ export async function generateCommand(options: { spec: string, out?: string, dry
                 const cp = require('child_process');
                 // Basic QA: install and build
                 cp.execSync('npm install', { cwd: outDir, stdio: 'inherit' });
+                cp.execSync('npm run format', { cwd: outDir, stdio: 'inherit' });
                 cp.execSync('npm run build', { cwd: outDir, stdio: 'inherit' });
                 console.log(chalk.green(`QA Gate Passed!`));
             } catch (e) {
