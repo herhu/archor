@@ -6,28 +6,36 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard } from '@nestjs/throttler';
 
-import { PatientModule } from './modules/patient/patient.module';
+{{#each domainModules}}
+import { {{this.className}} } from '{{this.importPath}}';
+{{/each}}
 
 @Module({
 imports: [
 ConfigModule,
 LoggerModule,
 
+{{#if platform.throttling}}
 ThrottlerModule.forRoot([{
-ttl: Number(process.env.RATE_LIMIT_TTL ?? 60),
-limit: Number(process.env.RATE_LIMIT_MAX ?? 100)
+ttl: Number(process.env.RATE_LIMIT_TTL ?? {{platform.rateLimitTtl}}),
+limit: Number(process.env.RATE_LIMIT_MAX ?? {{platform.rateLimitMax}})
 }]),
+{{/if}}
 
 HealthModule,
 
 // Domain modules
-PatientModule,
+{{#each domainModules}}
+{{this.className}},
+{{/each}}
 ],
 providers: [
+{{#if platform.throttling}}
 {
 provide: APP_GUARD,
 useClass: ThrottlerGuard
 }
+{{/if}}
 ]
 })
 export class AppModule {}

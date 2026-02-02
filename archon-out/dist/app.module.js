@@ -8,9 +8,12 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
-const config_1 = require("@nestjs/config");
-const typeorm_1 = require("@nestjs/typeorm");
-const auth_module_1 = require("./auth/auth.module");
+const config_module_1 = require("./shared/config/config.module");
+const logger_module_1 = require("./shared/logging/logger.module");
+const health_module_1 = require("./shared/health/health.module");
+const throttler_1 = require("@nestjs/throttler");
+const core_1 = require("@nestjs/core");
+const throttler_2 = require("@nestjs/throttler");
 const patient_module_1 = require("./modules/patient/patient.module");
 let AppModule = class AppModule {
 };
@@ -18,18 +21,21 @@ exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            config_1.ConfigModule.forRoot({ isGlobal: true }),
-            typeorm_1.TypeOrmModule.forRoot({
-                type: 'postgres',
-                url: process.env.DATABASE_URL,
-                entities: [__dirname + '/**/*.entity{.ts,.js}'],
-                synchronize: true,
-            }),
-            auth_module_1.AuthModule,
+            config_module_1.ConfigModule,
+            logger_module_1.LoggerModule,
+            throttler_1.ThrottlerModule.forRoot([{
+                    ttl: Number(process.env.RATE_LIMIT_TTL ?? 60),
+                    limit: Number(process.env.RATE_LIMIT_MAX ?? 100)
+                }]),
+            health_module_1.HealthModule,
             patient_module_1.PatientModule,
         ],
-        controllers: [],
-        providers: [],
+        providers: [
+            {
+                provide: core_1.APP_GUARD,
+                useClass: throttler_2.ThrottlerGuard
+            }
+        ]
     })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map

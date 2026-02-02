@@ -33,6 +33,9 @@ export async function generateApp(spec: DesignSpec, outDir: string, dryRun: bool
     // 1. Scaffold Base App
     await generateScaffold(spec, outDir, templatesDir, dryRun);
 
+    // 1.5 Generate Platform
+    await generatePlatform(spec, outDir, templatesDir, dryRun);
+
     // 2. Generate Modules (Domains)
     for (const domain of spec.domains) {
         await generateDomain(domain, outDir, templatesDir, dryRun);
@@ -74,22 +77,6 @@ async function generateScaffold(spec: DesignSpec, outDir: string, tplDir: string
     // .gitignore
     const gitignoreTpl = await fs.readFile(path.join(tplDir, 'nestjs/gitignore.hbs'), 'utf-8');
     await writeArtifact(path.join(outDir, '.gitignore'), gitignoreTpl, dryRun);
-
-    // Create src content
-    const mainTpl = await fs.readFile(path.join(tplDir, 'nestjs/main.ts.hbs'), 'utf-8');
-    await writeArtifact(path.join(outDir, 'src/main.ts'), mainTpl, dryRun);
-
-    const appModuleTpl = await fs.readFile(path.join(tplDir, 'nestjs/app.module.ts.hbs'), 'utf-8');
-
-    // Module Imports context
-    const moduleImports = spec.domains.map(d => ({
-        className: d.key.charAt(0).toUpperCase() + d.key.slice(1) + 'Module',
-        importPath: `./modules/${d.key}/${d.key}.module`,
-        domainKey: d.key
-    }));
-
-    const appModuleContent = Handlebars.compile(appModuleTpl)({ moduleImports });
-    await writeArtifact(path.join(outDir, 'src/app.module.ts'), appModuleContent, dryRun);
 }
 
 function toKebab(s: string) {
@@ -464,4 +451,68 @@ function exampleBodyForCrud(entity: Entity) {
         }
     }
     return ex;
+}
+
+// 7. Generate Platform Layer
+async function generatePlatform(spec: DesignSpec, outDir: string, tplDir: string, dryRun: boolean) {
+    const platformDefaults = {
+        cors: true,
+        cookieParser: true,
+        securityHeaders: true,
+        swagger: true,
+        throttling: true,
+        rateLimitTtl: 60,
+        rateLimitMax: 100,
+        maxBodySize: "1mb"
+    };
+
+    // Use values from spec if available, otherwise defaults
+    const platform = { ...platformDefaults, ...(spec as any).platform };
+
+    // Hardcoded for now as requested
+    const apiPrefix = 'api/v1';
+    const port = 3000;
+
+    const domainModules = spec.domains.map(d => ({
+        className: d.key.charAt(0).toUpperCase() + d.key.slice(1) + 'Module',
+        importPath: `./modules/${d.key}/${d.key}.module`
+    }));
+
+    const context = {
+        platform,
+        domainModules,
+        apiPrefix,
+        port,
+        projectName: spec.name
+    };
+
+    // Helper to render platform file
+    const render = async (srcRel: string, destRel: string) => {
+        const tpl = await fs.readFile(path.join(tplDir, 'platform', srcRel), 'utf-8');
+        const content = Handlebars.compile(tpl)(context);
+        await writeArtifact(path.join(outDir, destRel), content, dryRun);
+    };
+
+    // Main files
+    await render('main.ts.hbs', 'src/main.ts');
+    await render('app.module.ts.hbs', 'src/app.module.ts');
+
+    // Shared files
+    await render('shared/config/config.schema.ts.hbs', 'src/shared/config/config.schema.ts');
+    await render('shared/config/config.module.ts.hbs', 'src/shared/config/config.module.ts');
+
+    await render('shared/logging/logger.module.ts.hbs', 'src/shared/logging/logger.module.ts');
+    await render('shared/logging/pino.options.ts.hbs', 'src/shared/logging/pino.options.ts');
+
+    await render('shared/middleware/correlation-id.middleware.ts.hbs', 'src/shared/middleware/correlation-id.middleware.ts');
+
+    await render('shared/filters/http-exception.filter.ts.hbs', 'src/shared/filters/http-exception.filter.ts');
+
+    await render('shared/interceptors/transform.interceptor.ts.hbs', 'src/shared/interceptors/transform.interceptor.ts');
+
+    await render('shared/health/health.module.ts.hbs', 'src/shared/health/health.module.ts');
+    await render('shared/health/health.controller.ts.hbs', 'src/shared/health/health.controller.ts');
+    await render('shared/health/health.service.ts.hbs', 'src/shared/health/health.service.ts');
+
+    await render('shared/swagger/swagger.ts.hbs', 'src/shared/swagger/swagger.ts');
 }

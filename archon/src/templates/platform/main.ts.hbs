@@ -17,16 +17,21 @@ async function bootstrap() {
     bufferLogs: true
   });
 
-  const globalPrefix = process.env.API_PREFIX || 'api/v1';
+  const globalPrefix = process.env.API_PREFIX || '{{apiPrefix}}';
   app.setGlobalPrefix(globalPrefix);
 
   // Security headers
+  {{#if platform.securityHeaders}}
   app.use(helmet());
+  {{/if}}
 
   // Cookies (for future AuthPack / refresh cookies)
+  {{#if platform.cookieParser}}
   app.use(cookieParser());
+  {{/if}}
 
   // CORS
+  {{#if platform.cors}}
   const origins = parseOrigins(process.env.CORS_ORIGINS);
   app.enableCors({
     origin: origins.length ? origins : true, // dev-friendly
@@ -35,11 +40,14 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type','Authorization','X-Correlation-Id'],
     exposedHeaders: ['X-Correlation-Id']
   });
+  {{/if}}
 
   // Body size limits (express defaults are OK; keep explicit for clarity)
   // If you later add file uploads, split limits per route.
-  app.use(require('express').json({ limit: '1mb' }));
-  app.use(require('express').urlencoded({ extended: true, limit: '1mb' }));
+  {{#if platform.maxBodySize}}
+  app.use(require('express').json({ limit: '{{platform.maxBodySize}}' }));
+  app.use(require('express').urlencoded({ extended: true, limit: '{{platform.maxBodySize}}' }));
+  {{/if}}
 
   // Validation
   app.useGlobalPipes(
@@ -54,15 +62,19 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
 
   // Swagger
+  {{#if platform.swagger}}
   setupSwagger(app);
+  {{/if}}
 
-  const port = process.env.PORT ? Number(process.env.PORT) : 3000;
+  const port = process.env.PORT ? Number(process.env.PORT) : {{port}};
   await app.listen(port);
 
   // eslint-disable-next-line no-console
   console.log(`API running: http://localhost:${port}/${globalPrefix}`);
+  {{#if platform.swagger}}
   // eslint-disable-next-line no-console
   console.log(`Swagger: http://localhost:${port}/docs`);
+  {{/if}}
 }
 
 bootstrap();

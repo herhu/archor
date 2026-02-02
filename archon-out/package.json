@@ -28,7 +28,15 @@
 "class-transformer": "^0.5.0",
 "jose": "^5.0.0",
 "reflect-metadata": "^0.1.13",
-"rxjs": "^7.8.1"
+"rxjs": "^7.8.1",
+"joi": "^17.11.0",
+"nestjs-pino": "^4.0.0",
+"pino-pretty": "^10.2.3",
+"pino-http": "^9.0.0",
+"helmet": "^7.1.0",
+"cookie-parser": "^1.4.6",
+"@nestjs/throttler": "^5.0.0",
+"uuid": "^9.0.1"
 },
 "devDependencies": {
 "@nestjs/cli": "^10.0.0",
@@ -38,6 +46,8 @@
 "@types/jest": "^29.5.2",
 "@types/node": "^20.3.1",
 "@types/supertest": "^2.0.12",
+"@types/cookie-parser": "^1.4.3",
+"@types/uuid": "^9.0.2",
 "@typescript-eslint/eslint-plugin": "^6.0.0",
 "@typescript-eslint/parser": "^6.0.0",
 "eslint": "^8.42.0",
