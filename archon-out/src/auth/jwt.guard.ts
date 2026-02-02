@@ -3,6 +3,7 @@ import {
   ExecutionContext,
   Injectable,
   UnauthorizedException,
+  Logger,
 } from "@nestjs/common";
 import { createRemoteJWKSet, jwtVerify, type JWTPayload } from "jose";
 import { loadJwtConfig } from "./jwt.config";
@@ -63,6 +64,7 @@ function extractScopes(payload: any): string[] {
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
+  private readonly logger = new Logger(JwtAuthGuard.name);
   private jwks?: ReturnType<typeof createRemoteJWKSet>;
   private cfg = loadJwtConfig();
 
@@ -94,7 +96,7 @@ export class JwtAuthGuard implements CanActivate {
       req.user = user;
       return true;
     } catch (e: any) {
-      console.error(e);
+      this.logger.error(e);
       throw new UnauthorizedException("Invalid token");
     }
   }
