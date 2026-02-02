@@ -15,7 +15,11 @@ export function pinoOptions() {
             options: { singleLine: true, colorize: true },
           },
       genReqId: function (req: any, res: any) {
-        return req.headers["x-correlation-id"] || undefined;
+        // Use correlation ID middleware's ID if present
+        if (req.headers["x-correlation-id"]) {
+          return req.headers["x-correlation-id"];
+        }
+        return undefined; // Let pino generate one fallback or leave empty
       },
     },
   };

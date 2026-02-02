@@ -2,6 +2,7 @@ import "reflect-metadata";
 import { NestFactory } from "@nestjs/core";
 import { NestExpressApplication } from "@nestjs/platform-express";
 import { ValidationPipe } from "@nestjs/common";
+import { PinoLogger } from "nestjs-pino";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import { AppModule } from "./app.module";
@@ -20,6 +21,13 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bufferLogs: true,
   });
+
+  // Use structured logger
+  app.useLogger(app.get(PinoLogger));
+  app.flushLogs();
+
+  // Graceful shutdown
+  app.enableShutdownHooks();
 
   const globalPrefix = process.env.API_PREFIX || "api/v1";
   app.setGlobalPrefix(globalPrefix);

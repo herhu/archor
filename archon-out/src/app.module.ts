@@ -5,6 +5,8 @@ import {
   RequestMethod,
 } from "@nestjs/common";
 import { ConfigModule } from "./shared/config/config.module";
+import { ConfigService } from "@nestjs/config";
+import { TypeOrmModule } from "@nestjs/typeorm";
 import { LoggerModule } from "./shared/logging/logger.module";
 import { HealthModule } from "./shared/health/health.module";
 import { CorrelationIdMiddleware } from "./shared/middleware/correlation-id.middleware";
@@ -18,6 +20,17 @@ import { PatientModule } from "./modules/patient/patient.module";
   imports: [
     ConfigModule,
     LoggerModule,
+
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        type: "postgres",
+        url: configService.get<string>("DATABASE_URL"),
+        autoLoadEntities: true,
+        synchronize: configService.get<string>("NODE_ENV") !== "production", // Safe default
+      }),
+      inject: [ConfigService],
+    }),
 
     ThrottlerModule.forRoot([
       {

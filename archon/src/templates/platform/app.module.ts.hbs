@@ -1,5 +1,7 @@
 import { Module, NestModule, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
 import { ConfigModule } from './shared/config/config.module';
+import { ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from './shared/logging/logger.module';
 import { HealthModule } from './shared/health/health.module';
 import { CorrelationIdMiddleware } from './shared/middleware/correlation-id.middleware';
@@ -16,33 +18,44 @@ imports: [
 ConfigModule,
 LoggerModule,
 
-{{#if platform.throttling}}
-ThrottlerModule.forRoot([{
-ttl: Number(process.env.RATE_LIMIT_TTL ?? {{platform.rateLimitTtl}}),
-limit: Number(process.env.RATE_LIMIT_MAX ?? {{platform.rateLimitMax}})
-}]),
-{{/if}}
+TypeOrmModule.forRootAsync({
+imports: [ConfigModule],
+useFactory: (configService: ConfigService) => ({
+type: 'postgres',
+url: configService.get<string>('DATABASE_URL'),
+    autoLoadEntities: true,
+    synchronize: configService.get<string>('NODE_ENV') !== 'production', // Safe default
+        }),
+        inject: [ConfigService],
+        }),
 
-HealthModule,
+        {{#if platform.throttling}}
+        ThrottlerModule.forRoot([{
+        ttl: Number(process.env.RATE_LIMIT_TTL ?? {{platform.rateLimitTtl}}),
+        limit: Number(process.env.RATE_LIMIT_MAX ?? {{platform.rateLimitMax}})
+        }]),
+        {{/if}}
 
-// Domain modules
-{{#each domainModules}}
-{{this.className}},
-{{/each}}
-],
-providers: [
-{{#if platform.throttling}}
-{
-provide: APP_GUARD,
-useClass: ThrottlerGuard
-}
-{{/if}}
-]
-})
-export class AppModule implements NestModule {
-configure(consumer: MiddlewareConsumer) {
-consumer
-.apply(CorrelationIdMiddleware)
-.forRoutes({ path: '*', method: RequestMethod.ALL });
-}
-}
+        HealthModule,
+
+        // Domain modules
+        {{#each domainModules}}
+        {{this.className}},
+        {{/each}}
+        ],
+        providers: [
+        {{#if platform.throttling}}
+        {
+        provide: APP_GUARD,
+        useClass: ThrottlerGuard
+        }
+        {{/if}}
+        ]
+        })
+        export class AppModule implements NestModule {
+        configure(consumer: MiddlewareConsumer) {
+        consumer
+        .apply(CorrelationIdMiddleware)
+        .forRoutes({ path: '*', method: RequestMethod.ALL });
+        }
+        }
