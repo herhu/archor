@@ -1,0 +1,21 @@
+{
+    "llm": {
+        "provider": "ollama",
+        "host": "http://127.0.0.1:11434",
+        "models": {
+            "draft": "llama3.2:3b",
+            "polish": "llama3.1:8b",
+            "repair": "qwen2.5-coder:7b"
+        },
+        "temperature": {
+            "draft": 0.3,
+            "polish": 0.2,
+            "repair": 0.1
+        },
+        "numPredict": {
+            "draft": 1024,
+            "polish": 2048,
+            "repair": 1024
+        }
+    }
+}

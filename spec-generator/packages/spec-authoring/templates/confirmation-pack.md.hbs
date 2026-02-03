@@ -1,0 +1,62 @@
+# Confirmation Pack — {{appName}}
+
+## What you’re getting
+A backend API for a marketplace that supports:
+- Catalog listings ({{itemName}})
+- Browse + search (if enabled)
+- Cart and checkout
+- Orders and order status
+- Optional integrations: payments, email, delivery (based on your choices)
+
+---
+
+## Key decisions (your choices)
+- Auth mode: **{{authMode}}**
+- Payments provider: **{{paymentsProvider}}**
+- Email provider: **{{emailProvider}}**
+- Delivery provider: **{{deliveryProvider}}**
+- Inventory mode: **{{inventoryMode}}**
+- Currency: **{{currency}}**
+
+---
+
+## Data model (entities)
+{{#each domains}}
+### Domain: {{this.name}} (key: {{this.key}})
+{{#each this.entities}}
+**{{this.name}}**
+{{#each this.fields}}
+- {{this.name}} : {{this.type}}{{#if this.nullable}} (nullable){{/if}}{{#if this.primary}} (primary){{/if}}
+{{/each}}
+
+{{/each}}
+{{/each}}
+
+---
+
+## API surface (endpoints)
+{{#each domains}}
+### {{this.key}} routes
+{{#each this.services}}
+**Base route:** `/{{this.route}}`
+CRUD: {{this.crud}}
+
+Custom operations:
+{{#each this.operations}}
+- `{{this.method}} /{{../this.route}}{{this.path}}` {{#if this.authz.required}}(protected){{else}}(public){{/if}}
+{{/each}}
+
+{{/each}}
+{{/each}}
+
+---
+
+## Auth rules (summary)
+- Public endpoints: only those explicitly marked public.
+- Protected endpoints: require JWT + scopes where specified.
+
+---
+
+## Next step
+Reply **APPROVE** to generate the backend from this blueprint, or reply with changes (e.g., “make browsing private” /
+“remove payments” / “add categories”).

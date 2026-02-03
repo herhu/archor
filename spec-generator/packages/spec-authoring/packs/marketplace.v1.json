@@ -1,0 +1,148 @@
+{
+    "id": "marketplace.v1",
+    "label": "Marketplace (Catalog + Cart + Orders)",
+    "description": "Template for a basic marketplace backend: catalog listings, public browse/search, cart, checkout, orders. Optional payment/email/delivery decisions are captured as intents.",
+    "defaults": {
+        "appName": "Marketplace API",
+        "domainKeys": {
+            "catalog": "catalog",
+            "cart": "cart",
+            "order": "order"
+        },
+        "authMode": "public_browse_private_checkout",
+        "paymentsProvider": "paypal",
+        "emailProvider": "smtp",
+        "deliveryProvider": "internal_status",
+        "inventoryMode": "simple_stock",
+        "currency": "EUR"
+    },
+    "steps": [
+        {
+            "key": "app.name",
+            "type": "string",
+            "required": true,
+            "prompt": "What is the name of your app?",
+            "example": "Shoe Marketplace API",
+            "defaultFrom": "defaults.appName"
+        },
+        {
+            "key": "catalog.itemName",
+            "type": "string",
+            "required": true,
+            "prompt": "What do you sell? (singular entity name)",
+            "example": "Shoe",
+            "default": "Shoe"
+        },
+        {
+            "key": "catalog.route",
+            "type": "string",
+            "required": true,
+            "prompt": "Catalog route path (plural, kebab-case)",
+            "example": "shoes",
+            "default": "shoes",
+            "rules": {
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*s$"
+            }
+        },
+        {
+            "key": "auth.mode",
+            "type": "enum",
+            "required": true,
+            "prompt": "Auth mode?",
+            "defaultFrom": "defaults.authMode",
+            "options": [
+                "public_browse_private_checkout",
+                "all_private",
+                "all_public"
+            ]
+        },
+        {
+            "key": "payments.provider",
+            "type": "enum",
+            "required": true,
+            "prompt": "Payments provider?",
+            "defaultFrom": "defaults.paymentsProvider",
+            "options": [
+                "paypal",
+                "stripe",
+                "none"
+            ]
+        },
+        {
+            "key": "email.provider",
+            "type": "enum",
+            "required": true,
+            "prompt": "Email provider?",
+            "defaultFrom": "defaults.emailProvider",
+            "options": [
+                "smtp",
+                "ses",
+                "none"
+            ]
+        },
+        {
+            "key": "delivery.provider",
+            "type": "enum",
+            "required": true,
+            "prompt": "Delivery integration level?",
+            "defaultFrom": "defaults.deliveryProvider",
+            "options": [
+                "internal_status",
+                "carrier_integration",
+                "none"
+            ]
+        },
+        {
+            "key": "inventory.mode",
+            "type": "enum",
+            "required": true,
+            "prompt": "Inventory complexity?",
+            "defaultFrom": "defaults.inventoryMode",
+            "options": [
+                "simple_stock",
+                "variants_by_size_color",
+                "no_inventory_tracking"
+            ]
+        },
+        {
+            "key": "catalog.currency",
+            "type": "string",
+            "required": true,
+            "prompt": "Default currency (3-letter code)",
+            "defaultFrom": "defaults.currency",
+            "rules": {
+                "pattern": "^[A-Z]{3}$"
+            }
+        },
+        {
+            "key": "features.search",
+            "type": "boolean",
+            "required": true,
+            "prompt": "Enable search endpoint?",
+            "default": true
+        },
+        {
+            "key": "features.categories",
+            "type": "boolean",
+            "required": true,
+            "prompt": "Enable category browsing endpoint?",
+            "default": true
+        },
+        {
+            "key": "features.admin",
+            "type": "boolean",
+            "required": true,
+            "prompt": "Enable admin operations (disable listing, etc.)?",
+            "default": true
+        }
+    ],
+    "outputs": {
+        "moduleIntents": {
+            "auth": "jwt",
+            "payments": "{answers.payments.provider}",
+            "email": "{answers.email.provider}",
+            "delivery": "{answers.delivery.provider}",
+            "inventory": "{answers.inventory.mode}"
+        }
+    }
+}

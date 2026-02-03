@@ -1,0 +1,269 @@
+{
+    "$id": "https://archon.dev/schema/designspec-v1.schema.json",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Archon DesignSpec v1",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "name",
+        "crossCutting",
+        "domains"
+    ],
+    "properties": {
+        "name": {
+            "type": "string",
+            "minLength": 1
+        },
+        "crossCutting": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "auth"
+            ],
+            "properties": {
+                "auth": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                        "jwt"
+                    ],
+                    "properties": {
+                        "jwt": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                                "issuer",
+                                "audience",
+                                "jwksUri"
+                            ],
+                            "properties": {
+                                "issuer": {
+                                    "type": "string",
+                                    "minLength": 1
+                                },
+                                "audience": {
+                                    "type": "string",
+                                    "minLength": 1
+                                },
+                                "jwksUri": {
+                                    "type": "string",
+                                    "minLength": 1
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "domains": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "$ref": "#/$defs/domainSpec"
+            }
+        }
+    },
+    "$defs": {
+        "domainSpec": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "name",
+                "key",
+                "entities",
+                "services"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "key": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "entities": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/$defs/entitySpec"
+                    }
+                },
+                "services": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/$defs/serviceSpec"
+                    }
+                }
+            }
+        },
+        "entitySpec": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "name",
+                "primaryKey",
+                "fields"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "primaryKey": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "fields": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/$defs/fieldSpec"
+                    }
+                }
+            }
+        },
+        "fieldSpec": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "name",
+                "type"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "int",
+                        "string",
+                        "boolean",
+                        "json"
+                    ]
+                },
+                "nullable": {
+                    "type": "boolean"
+                },
+                "primary": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "serviceSpec": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "name",
+                "route",
+                "entity",
+                "crud"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "route": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "entity": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "crud": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "create",
+                            "findAll",
+                            "findOne",
+                            "update",
+                            "delete"
+                        ]
+                    },
+                    "uniqueItems": true
+                },
+                "operations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/operationSpec"
+                    }
+                }
+            }
+        },
+        "operationSpec": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "name",
+                "method",
+                "path",
+                "authz"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "method": {
+                    "type": "string",
+                    "enum": [
+                        "GET",
+                        "POST",
+                        "PUT",
+                        "PATCH",
+                        "DELETE"
+                    ]
+                },
+                "path": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "^/.*"
+                },
+                "authz": {
+                    "$ref": "#/$defs/authz"
+                }
+            }
+        },
+        "authz": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                        "required"
+                    ],
+                    "properties": {
+                        "required": {
+                            "const": false
+                        }
+                    }
+                },
+                {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                        "scopesAll"
+                    ],
+                    "properties": {
+                        "scopesAll": {
+                            "type": "array",
+                            "minItems": 1,
+                            "items": {
+                                "type": "string",
+                                "minLength": 1
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

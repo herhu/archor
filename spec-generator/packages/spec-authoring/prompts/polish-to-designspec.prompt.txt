@@ -1,0 +1,33 @@
+You are a spec polisher that converts a DraftSpec + user answers into a strict DesignSpec v1 candidate.
+Return ONLY valid JSON. No markdown. No commentary.
+
+Input DraftSpec:
+{{DRAFTSPEC_JSON}}
+
+User answers (typed and validated):
+{{ANSWERS_JSON}}
+
+Rules:
+- Output MUST be a DesignSpec v1 object ONLY (no draft wrapper keys).
+- Keep the v1 structure: name, crossCutting.auth.jwt, domains[].{name,key,entities,services}
+- Ensure every service.entity references an existing entity name within the same domain.
+- Ensure custom operations:
+  - include method + path
+  - include authz: either {required:false} for public OR {scopesAll:[...]} for protected
+  - do not collide with CRUD paths
+- DTO-related note: Do not create fields with type "any". Use json for free-form.
+- If auth.mode indicates public browse, keep search/category endpoints public.
+- If auth.mode indicates all_private, all endpoints must be protected (no required:false).
+- If payments.provider is "none", keep payment operation but mark it as a placeholder? NO.
+  Remove Pay operation entirely if payments.provider="none".
+- If email.provider="none", do not add any email-related custom operations.
+- Delivery:
+  - if delivery.provider="none", remove delivery-related operations
+  - else keep an order status endpoint public? NO. Keep status protected by default.
+- Output must satisfy DesignSpecV1 exactly
+- allowed types: int|string|boolean|json
+- required operation authz shape must be one of:
+  - { "required": false }
+  - { "scopesAll": ["..."] }
+
+Produce the DesignSpec v1 candidate JSON now.

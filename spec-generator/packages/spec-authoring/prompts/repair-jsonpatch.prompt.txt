@@ -1,0 +1,21 @@
+You are a repair agent. Return ONLY a JSON array representing RFC6902 JSON Patch operations.
+No markdown. No commentary.
+
+We have a DesignSpec candidate JSON that failed validation.
+
+Candidate JSON:
+{{CANDIDATE_JSON}}
+
+Diagnostics (array):
+{{DIAGNOSTICS_JSON}}
+
+Rules:
+- Output only JSON Patch ops: [{op, path, value?}]
+- Fix ONLY what diagnostics mention.
+- Do not introduce new unrelated features.
+- Prefer "replace" over "add" when a value exists.
+- If a referenced entity name is wrong, patch the reference.
+- If an operation is missing authz, add authz.
+- If a field type is invalid, replace with closest allowed type (json/string/int/boolean).
+
+Return JSON Patch now.
