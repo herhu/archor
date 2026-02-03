@@ -1,34 +1,17 @@
 #!/bin/bash
 
-# Configuration
-TOKEN_URL="https://auth.example.com/oauth/token"
-CLIENT_ID="YOUR_CLIENT_ID"
-CLIENT_SECRET="YOUR_CLIENT_SECRET"
-AUDIENCE="https://api.example.com"
-SCOPE="openid profile"
+# Check if we have a local secret (either exported or in .env.docker)
+# We prioritize the file since we are in docker context usually
+if [ -f .env.docker ]; then
+  # export vars from .env.docker for the node script
+  export $(grep -v '^#' .env.docker | xargs)
+fi
 
-# Get Token
-RESPONSE=$(curl -s -X POST "$TOKEN_URL" \
--H "Content-Type: application/x-www-form-urlencoded" \
--d "grant_type=client_credentials" \
--d "client_id=$CLIENT_ID" \
--d "client_secret=$CLIENT_SECRET" \
--d "audience=$AUDIENCE" \
--d "scope=$SCOPE")
-
-# Extract Token (requires jq, fallback to grep/sed if needed, but jq is standard)
-if command -v jq &> /dev/null; then
-TOKEN=$(echo "$RESPONSE" | jq -r .access_token)
+if [ -n "$JWT_SECRET" ]; then
+  # Local generation
+  node scripts/generate-token.js
 else
-# Simple grep fallback
-TOKEN=$(echo "$RESPONSE" | grep -o '"access_token":"[^"]*' | grep -o '[^"]*$')
+  # Remote fallback (placeholder)
+  echo "Error: JWT_SECRET not found. Configure .env.docker or set JWT_SECRET." >&2
+  exit 1
 fi
-
-if [ -z "$TOKEN" ] || [ "$TOKEN" == "null" ]; then
-echo "Error getting token:"
-echo "$RESPONSE"
-exit 1
-fi
-
-echo "export TOKEN=\"$TOKEN\""
-echo "Token exported to environment variable TOKEN"

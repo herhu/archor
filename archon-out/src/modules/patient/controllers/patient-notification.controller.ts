@@ -7,6 +7,7 @@ import {
   Body,
   Param,
   UseGuards,
+  ParseIntPipe,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -24,7 +25,7 @@ import { Scopes } from "../../../auth/scopes.decorator";
 @ApiBearerAuth("bearer")
 @Controller("notifications")
 export class PatientNotificationController {
-  constructor(private readonly service: PatientNotificationService) {}
+  constructor(private readonly service: PatientNotificationService) { }
 
   @Post()
   @ApiOperation({ summary: "Create PatientNotification" })
@@ -44,12 +45,36 @@ export class PatientNotificationController {
     return this.service.findAll();
   }
 
+  // ---- Custom operations (STATIC routes first) ----
+
+  @Patch("toggle")
+  @ApiOperation({ summary: "Toggle" })
+  @ApiOAuth2(["patient:write"])
+  @UseGuards(JwtAuthGuard, ScopesGuard)
+  @Scopes("patient:write")
+  async toggle(@Body() body: any) {
+    // TODO: Implement operation logic
+    return { message: "Operation toggle executed" };
+  }
+
+  @Get("status")
+  @ApiOperation({ summary: "Status" })
+  @ApiOAuth2(["patient:read"])
+  @UseGuards(JwtAuthGuard, ScopesGuard)
+  @Scopes("patient:read")
+  async status() {
+    // TODO: Implement operation logic
+    return { message: "Operation status executed" };
+  }
+
+  // ---- Param routes last ----
+
   @Get(":id")
   @ApiOperation({ summary: "Get PatientNotification" })
   @ApiOAuth2(["patient:read"])
   @UseGuards(JwtAuthGuard, ScopesGuard)
   @Scopes("patient:read")
-  async findOne(@Param("id") id: number) {
+  async findOne(@Param("id", ParseIntPipe) id: number) {
     return this.service.findOne(id);
   }
 
@@ -58,7 +83,10 @@ export class PatientNotificationController {
   @ApiOAuth2(["patient:write"])
   @UseGuards(JwtAuthGuard, ScopesGuard)
   @Scopes("patient:write")
-  async update(@Param("id") id: number, @Body() dto: any) {
+  async update(
+    @Param("id", ParseIntPipe) id: number,
+    @Body() dto: any
+  ) {
     return this.service.update(id, dto);
   }
 
@@ -67,24 +95,7 @@ export class PatientNotificationController {
   @ApiOAuth2(["patient:write"])
   @UseGuards(JwtAuthGuard, ScopesGuard)
   @Scopes("patient:write")
-  async delete(@Param("id") id: number) {
+  async delete(@Param("id", ParseIntPipe) id: number) {
     return this.service.delete(id);
-  }
-
-  // Custom operations
-  @Patch("/toggle")
-  @ApiOperation({ summary: "Toggle" })
-  @ApiOAuth2([])
-  @UseGuards(JwtAuthGuard, ScopesGuard)
-  @Scopes()
-  async Toggle(@Body() body: any) {
-    // TODO: Implement operation logic
-    return { message: "Operation Toggle executed" };
-  }
-  @Get("/status")
-  @ApiOperation({ summary: "Status" })
-  async Status() {
-    // TODO: Implement operation logic
-    return { message: "Operation Status executed" };
   }
 }
