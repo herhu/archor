@@ -2,7 +2,7 @@ import "reflect-metadata";
 import { NestFactory } from "@nestjs/core";
 import { NestExpressApplication } from "@nestjs/platform-express";
 import { ValidationPipe } from "@nestjs/common";
-import { PinoLogger } from "nestjs-pino";
+import { Logger } from "nestjs-pino";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import { AppModule } from "./app.module";
@@ -24,7 +24,7 @@ async function bootstrap() {
   });
 
   // Use structured logger
-  app.useLogger(app.get(PinoLogger));
+  app.useLogger(app.get(Logger));
   app.flushLogs();
 
   // Graceful shutdown
@@ -88,9 +88,9 @@ async function bootstrap() {
   const port = process.env.PORT ? Number(process.env.PORT) : 3000;
   await app.listen(port);
 
-  const logger = app.get(PinoLogger);
-  logger.info(`API running: http://localhost:${port}/${globalPrefix}`);
-  logger.info(`Swagger: http://localhost:${port}/docs`);
+  const logger = app.get(Logger);
+  logger.log(`API running: http://localhost:${port}/${globalPrefix}`);
+  logger.log(`Swagger: http://localhost:${port}/docs`);
 }
 
 bootstrap();

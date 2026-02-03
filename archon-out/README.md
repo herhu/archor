@@ -110,3 +110,15 @@ npm run test:cov
 - **Base URL**: `http://localhost:3000`
 - **API Reference**: See `docs/api.md` for full endpoint documentation and Curl examples.
 - **Authentication**: Bearer Token required for most endpoints. See `docs/api.md` for token acquisition details.
+
+## Run with Docker
+
+```bash
+docker compose up --build
+```
+
+Then open:
+
+* Swagger: [http://localhost:3000/docs](http://localhost:3000/docs)
+* Health: [http://localhost:3000/api/v1/health](http://localhost:3000/api/v1/health)
+* Readiness: [http://localhost:3000/api/v1/health/ready](http://localhost:3000/api/v1/health/ready)
