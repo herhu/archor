@@ -8,7 +8,13 @@ User answers (typed and validated):
 {{ANSWERS_JSON}}
 
 Rules:
-- Output MUST be a DesignSpec v1 object ONLY (no draft wrapper keys).
+CRITICAL:
+- If you cannot produce a valid DesignSpec v1 object that satisfies all rules, output an empty JSON object {}.
+- Do NOT guess values to “make it work”.
+- Do NOT add placeholder fields.
+- The output will be rejected by a strict JSON Schema validator.
+
+- You must output a valid "DesignSpec v1" object ONLY. (no draft wrapper keys).
 - Keep the v1 structure: name, crossCutting.auth.jwt, domains[].{name,key,entities,services}
 - Ensure every service.entity references an existing entity name within the same domain.
 - Ensure custom operations:

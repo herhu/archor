@@ -1,8 +1,8 @@
 import { LlamaAdapter } from "./deps";
 import { DraftSpec, Diagnostic } from "./types";
 import { ArchonError } from "./errors";
-import { readFileSync } from "fs";
-import path from "path";
+import * as fs from "fs";
+import * as path from "path";
 
 type OllamaChatResponse = {
     message?: { content?: string };
@@ -56,22 +56,32 @@ async function callOllama(args: {
 function loadPrompt(fileRel: string): string {
     // prompts live under packages/spec-authoring/prompts/
     const p = path.join(process.cwd(), "packages", "spec-authoring", "prompts", fileRel);
-    return readFileSync(p, "utf8");
+    return fs.readFileSync(p, "utf8");
 }
 
 function render(template: string, vars: Record<string, any>): string {
     return template.replace(/\{\{(\w+)\}\}/g, (_m, k) => String(vars[k] ?? ""));
 }
 
-async function jsonOnlyCallWithRetry<T>(fn: () => Promise<string>, retryOnce = true): Promise<T> {
+async function jsonOnlyCallWithRetry<T>(
+    fn: () => Promise<string>,
+    retryOnce = true,
+    validator?: (val: T) => void
+): Promise<T> {
     const raw1 = await fn();
     try {
-        return mustJsonParse<T>(raw1);
+        const parsed = mustJsonParse<T>(raw1);
+        if (validator) validator(parsed);
+        return parsed;
     } catch (e) {
         if (!retryOnce) throw e;
         // minimal “format reminder” retry: append strict instruction
+        // We'll just call the function again for now, trusting the model/system prompt holds.
+        // In a real agent we might append "You output invalid JSON/Type. Fix it." to the messages.
         const raw2 = await fn();
-        return mustJsonParse<T>(raw2);
+        const parsed2 = mustJsonParse<T>(raw2);
+        if (validator) validator(parsed2);
+        return parsed2;
     }
 }
 
@@ -133,8 +143,14 @@ export function buildOllamaLlamaAdapter(opts?: {
             });
 
             // patch array only
-            return jsonOnlyCallWithRetry<any>(() =>
-                callOllama({ host, model: getModel("repair"), system, user, temperature, numPredict: 1024 })
+            return jsonOnlyCallWithRetry<any>(
+                () => callOllama({ host, model: getModel("repair"), system, user, temperature, numPredict: 1024 }),
+                true,
+                (parsed) => {
+                    if (!Array.isArray(parsed)) {
+                        throw new ArchonError("LLM output must be an array of patch ops", "LLM_INVALID_JSON");
+                    }
+                }
             );
         }
     };

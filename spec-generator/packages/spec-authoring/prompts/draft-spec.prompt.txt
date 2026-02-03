@@ -21,6 +21,10 @@ Constraints:
 - Prefer int, string, boolean, json.
 - CRUD must be ["create","findAll","findOne","update","delete"] when present.
 - For public endpoints, set authz.required=false. Otherwise, set scopesAll for protected operations.
+- openQuestions[].key MUST be one of the keys defined in the template pack context.
+- Do NOT invent new question keys.
+- specCandidate must NOT contain any keys outside the DesignSpec v1 structure.
+- If unsure, leave specCandidate fields empty rather than inventing values.
 
 Template pack context (if provided):
 {{PACK_CONTEXT_JSON}}

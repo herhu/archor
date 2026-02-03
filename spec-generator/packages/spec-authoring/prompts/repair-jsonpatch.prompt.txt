@@ -10,9 +10,11 @@ Diagnostics (array):
 {{DIAGNOSTICS_JSON}}
 
 Rules:
-- Output only JSON Patch ops: [{op, path, value?}]
-- Fix ONLY what diagnostics mention.
-- Do not introduce new unrelated features.
+- Return a JSON array of patch operations (RFC6902) ONLY.
+- Allowed ops: add, remove, replace.
+- All "path" values must be valid JSON pointers (start with /).
+- Do not output the full spec, only the patch structure.
+- If a diagnostic path is ambiguous, do not patch it.
 - Prefer "replace" over "add" when a value exists.
 - If a referenced entity name is wrong, patch the reference.
 - If an operation is missing authz, add authz.
