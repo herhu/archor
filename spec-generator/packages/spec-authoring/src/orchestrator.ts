@@ -61,6 +61,22 @@ export class DefaultOrchestrator implements SpecOrchestrator {
         );
     }
 
+    private enrichWithOpenQuestions(session: SpecSession, pack: any): SpecSession {
+        // Filter pack questions that are NOT in answers
+        const packQuestions = (pack.questions || []) as any[]; // strict type in real code
+        const answeredKeys = new Set(Object.keys(session.answers));
+
+        const open = packQuestions.filter(q => !answeredKeys.has(q.key));
+
+        // Also consider DraftSpec.openQuestions if they are additive?
+        // For V1, we trust the pack definition primarily for the "required" set.
+        // Prompt says "openQuestions[].key MUST be one of the keys defined in the template pack".
+        // So relying on pack.questions is safe and correct.
+
+        session.openQuestions = open;
+        return session;
+    }
+
     async initSession(args: { templateId: string; prompt: string }): Promise<SpecSession> {
         const pack = await this.packLoader.load(args.templateId);
 
@@ -85,11 +101,14 @@ export class DefaultOrchestrator implements SpecOrchestrator {
         };
 
         await this.store.create(session);
-        return session;
+        return this.enrichWithOpenQuestions(session, pack);
     }
 
     async showSession(args: { sessionId: string }): Promise<SpecSession> {
-        return this.store.get(args.sessionId);
+        const session = await this.store.get(args.sessionId);
+        if (!session.templateId) return session;
+        const pack = await this.packLoader.load(session.templateId);
+        return this.enrichWithOpenQuestions(session, pack);
     }
 
     async answerSession(args: { sessionId: string; set: Record<string, any> }): Promise<SpecSession> {
@@ -112,7 +131,7 @@ export class DefaultOrchestrator implements SpecOrchestrator {
         updated.status = "questions";
 
         await this.store.put(updated);
-        return updated;
+        return this.enrichWithOpenQuestions(updated, pack);
     }
 
     async finalizeSession(args: { sessionId: string; options?: FinalizeOptions }): Promise<SpecSession> {
@@ -164,12 +183,17 @@ export class DefaultOrchestrator implements SpecOrchestrator {
                 outputHash: hashObj({ ok, diagnostics: res.diagnostics })
             });
 
-            if (ok && res.normalized) {
+            if (res.normalized) {
                 session.finalSpec = res.normalized;
                 session.status = opts.autoApprove ? "approved" : "final";
                 if (opts.autoApprove) {
                     session.approval = { approved: true, approvedAt: nowIso(), approvedBy: "system" };
                 }
+
+                // Render confirmation for UI
+                const md = await this.confirmation.render({ session, spec: session.finalSpec });
+                session.confirmationMd = md;
+
                 await this.store.put(session);
                 return session;
             }

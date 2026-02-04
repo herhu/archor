@@ -494,55 +494,45 @@
       <section class="hero" id="top">
         <div class="grid">
           <div class="card">
-            <h1 class="headline">I turn ideas into real product foundations.</h1>
+            <h1 class="headline">We do NOT build "vibe code".</h1>
             <p class="subhead">
-              <b>System architecture delivered in 24–48 hours</b> — clear structure, secure access rules,
-              clean API, documentation, diagrams, OpenAPI, Postman, and curl examples.
+              Most AI tools promise speed and give you technical debt.<br>
+              <b>We generate architecture.</b>
+            </p>
+            <p>
+              A deterministic, production-grade backend foundation that an actual engineering team can respect.
+              Secure by default. No hallucinations. No "magic".
             </p>
 
             <div class="split">
-              <div class="pill"><b>Outcome:</b> runnable backend foundation</div>
-              <div class="pill"><b>Speed:</b> days, not weeks</div>
-              <div class="pill"><b>Security:</b> JWT + scopes + (optional) roles</div>
-              <div class="pill"><b>Docs:</b> OpenAPI + Postman + curl</div>
+              <div class="pill"><b>Output:</b> Strict NestJS + TypeORM</div>
+              <div class="pill"><b>Philosophy:</b> Rules > Randomness</div>
             </div>
 
             <div class="chips">
-              <span class="chip">No chaos</span>
-              <span class="chip">No guessing</span>
-              <span class="chip">One accountable owner</span>
-              <span class="chip">You own everything</span>
+              <span class="chip">No no-code</span>
+              <span class="chip">No frontend drag-and-drop</span>
+              <span class="chip">Backend only</span>
             </div>
 
-            <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:18px;">
-              <a class="cta" href="#contact">Tell me your idea <small>→</small></a>
-              <a class="ghost" href="#deliverables">See what you get</a>
+            <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:24px;">
+              <button class="cta" onclick="toggleChat()">Start Architecting <small>→</small></button>
+              <a class="ghost" href="#how">How it works</a>
             </div>
-
-            <p class="small muted" style="margin-top:14px;">
-              Tip: if you’re non-technical, just describe the problem and who it’s for. I’ll structure the rest.
-            </p>
           </div>
 
           <aside class="card">
-            <h2>🏠 The 30-second explanation</h2>
-            <div class="highlight">
-              <p style="margin:0;color:var(--text);">
-                Imagine you want to build a house.<br /><br />
-                ChatGPT is like asking a random builder to give you some bricks and sketches.<br /><br />
-                What I build is a <b>ready-to-live house blueprint</b> — with electricity, plumbing, safety rules,
-                and clear instructions — so a real construction team can build it <b>without surprises</b>.<br /><br />
-                Companies pay me because I save them <b>time, money, and mistakes</b>.
-              </p>
-            </div>
-
-            <div style="margin-top:14px;">
-              <h3>🤖 Do you use AI?</h3>
-              <p class="muted" style="margin:0;">
-                Yes — as a tool. AI helps me move faster, but the architecture is intentional and validated.
-                You’re paying for reliability and responsibility, not random output.
-              </p>
-            </div>
+            <h2>⛔ What We Are Not</h2>
+            <ul style="color:var(--text); line-height:1.6;">
+              <li>❌ We do NOT generate React/Next.js frontends.</li>
+              <li>❌ We do NOT promise "apps in minutes".</li>
+              <li>❌ We do NOT use "agents" that run in loops forever.</li>
+              <li>❌ We do NOT hide the code behind a dashboard.</li>
+              <li>❌ We do NOT replace your engineers.</li>
+            </ul>
+            <p class="muted small" style="margin-top:14px; border-top:1px solid var(--line); padding-top:12px;">
+              <b>Why?</b> Because in production, "fast" is cheap, but "correct" is priceless.
+            </p>
           </aside>
         </div>
       </section>
@@ -551,28 +541,26 @@
       <section class="section">
         <div class="grid">
           <div class="card">
-            <h2>❓ The problem</h2>
+            <h2>⚠️ The 60% Trap</h2>
             <p>
-              Most products fail before they’re built — not because the idea is bad, but because the foundation is
-              messy:
+              AI coding tools demo well. They get you to 60% fast. <br>
+              Then you hit the wall: security holes, weird database schemas, and code that no human wants to read.
             </p>
-            <ul>
-              <li>unclear permissions and security</li>
-              <li>developers build in different directions</li>
-              <li>data structure changes every week</li>
-              <li>the project becomes expensive to fix</li>
-            </ul>
+            <p class="muted">
+              That's when you rewrite everything.
+            </p>
           </div>
 
           <div class="card">
-            <h2>✅ The solution</h2>
+            <h2>✅ The Architect's Way</h2>
             <p>
-              I deliver a professional foundation that developers can extend safely. Think:
-              <b>blueprint + working base</b>.
+              We don't just "write code". We <b>design the spec first</b>.
             </p>
-            <p class="muted">
-              You don’t need a “team” — you need one architect accountable for the system.
-            </p>
+            <ul>
+              <li><b>1. Draft</b> a JSON blueprint (Entities, APIs, Auth).</li>
+              <li><b>2. Validate</b> it against strict schema rules.</li>
+              <li><b>3. Generate</b> boring, standard, maintainable TypeScript.</li>
+            </ul>
           </div>
         </div>
       </section>
@@ -738,7 +726,12 @@
       const body = document.getElementById("chatBody");
       const div = document.createElement("div");
       div.className = "msg " + type;
-      div.innerText = text;
+      // Basic detection if text contains HTML tags we injected
+      if (text.includes("<") && text.includes(">")) {
+        div.innerHTML = text;
+      } else {
+        div.innerText = text;
+      }
       body.appendChild(div);
       body.scrollTop = body.scrollHeight;
     }
@@ -812,7 +805,44 @@
     let currentQuestionKey = null;
 
     function handleSessionUpdate(session) {
-      // Logic to display status or next question
+      const body = document.getElementById("chatBody");
+
+      // 1. If we have confirmation markdown, show it (Phase 2 done)
+      if (session.confirmationMd) {
+        // Simple markdown render (bold, header, table substitution)
+        let html = session.confirmationMd
+          .replace(/# (.*)/g, '<h3>$1</h3>')
+          .replace(/## (.*)/g, '<h4>$1</h4>')
+          .replace(/\*\*(.*)\*\*/g, '<b>$1</b>')
+          .replace(/\n\| (.*) \|/g, (match, row) => `<div style="display:flex;gap:10px;margin:4px 0">${row.split('|').map(c => c.trim()).filter(Boolean).map(c => `<span>${c}</span>`).join('')}</div>`)
+          .replace(/\n- (.*)/g, '<li>$1</li>')
+          .replace(/\n/g, '<br>');
+
+        appendMsg(html, "bot"); // Render plain for now or innerHTML safe-ish
+
+        if (session.status !== "approved") {
+          const btn = document.createElement("button");
+          btn.className = "choice-btn";
+          btn.innerText = "✅ APPROVE BLUEPRINT";
+          btn.style.background = "var(--brand)";
+          btn.style.marginTop = "12px";
+          btn.onclick = async () => {
+            btn.disabled = true;
+            btn.innerText = "Approving...";
+            await fetch(API_URL + "/session/" + sessionId + "/approve", { method: "POST" });
+            appendMsg("Blueprint approved! Backend generation ready.", "bot");
+            // Trigger generation (stub for PoC)
+            appendMsg("🚀 Generation started (check CLI output for now, file download coming soon).", "bot");
+            // In real app, call /export or /generate endpoint
+          };
+          body.appendChild(btn);
+        } else {
+          appendMsg("Status: APPROVED. Ready for handoff.", "bot");
+        }
+        return;
+      }
+
+      // 2. Logic to display status or next question
       if (session.openQuestions && session.openQuestions.length > 0) {
         // Pick the first one
         const q = session.openQuestions[0];
@@ -820,26 +850,65 @@
 
         appendMsg(q.question, "bot");
 
-        // If options, render buttons?
+        // If options, render buttons
         if (q.options && q.options.length > 0) {
-          const body = document.getElementById("chatBody");
           q.options.forEach(opt => {
             const btn = document.createElement("button");
             btn.className = "choice-btn";
-            btn.innerText = opt.label || opt.value;
+            const val = typeof opt === 'string' ? opt : opt.value;
+            const label = typeof opt === 'string' ? opt : (opt.label || opt.value);
+
+            btn.innerText = label;
             btn.onclick = () => {
-              document.getElementById("chatInput").value = opt.value;
-              sendMessage();
+              if (currentQuestionKey) {
+                // Send generic answer
+                isWaiting = true;
+                fetch(API_URL + "/session/" + sessionId + "/answer", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ set: { [currentQuestionKey]: val } })
+                }).then(r => r.json()).then(d => {
+                  isWaiting = false;
+                  handleSessionUpdate(d);
+                });
+              }
             };
             body.appendChild(btn);
           });
-          body.scrollTop = body.scrollHeight;
         }
-      } else if (session.status === 'draft') {
-        appendMsg("Draft created! I have some questions to refine it.", "bot");
+      } else if (session.status === 'draft' || session.status === 'questions') {
+        // No open questions but status isn't final -> Ready to finalize
+        appendMsg("All questions answered! Ready to build the final blueprint?", "bot");
+
+        const btn = document.createElement("button");
+        btn.className = "choice-btn";
+        btn.innerText = "🔨 Finalize Architecture";
+        btn.onclick = async () => {
+          btn.disabled = true;
+          appendMsg("Polishing and validating... (this takes ~60s)", "user");
+          isWaiting = true;
+          try {
+            const res = await fetch(API_URL + "/session/" + sessionId + "/finalize", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ autoApprove: false })
+            });
+            const data = await res.json();
+            isWaiting = false;
+            if (data.error) throw new Error(data.error);
+            handleSessionUpdate(data);
+          } catch (e) {
+            isWaiting = false;
+            appendMsg("Error finalizing: " + e.message, "bot");
+          }
+        };
+        body.appendChild(btn);
+
       } else {
         appendMsg("Design is " + session.status + "! You can now finalize it in the CLI.", "bot");
       }
+
+      body.scrollTop = body.scrollHeight;
     }
   </script>
 </body>

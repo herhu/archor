@@ -14,6 +14,8 @@ Rules:
 - Allowed ops: add, remove, replace.
 - All "path" values must be valid JSON pointers (start with /).
 - Do not output the full spec, only the patch structure.
+- Fix ONLY what diagnostics mention. Do not change unrelated parts of the spec.
+- Each patch operation must directly address at least one diagnostic.
 - If no fixes are possible, return an empty array [].
 - If a diagnostic path is ambiguous, do not patch it.
 - Prefer "replace" over "add" when a value exists.

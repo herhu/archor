@@ -2,6 +2,7 @@ import { DesignSpecV1 } from "./designspec-v1";
 import { validateDesignSpecSchema } from "./ajv";
 import { validateSemanticV1 } from "./validate-semantic-v1";
 import { Diagnostic } from "../../spec-authoring/src/types";
+import { normalizeDesignSpecV1 } from "./normalizer";
 
 export function compileValidateV1(spec: unknown): { ok: boolean; diagnostics: Diagnostic[]; normalized?: DesignSpecV1 } {
     const diagnostics: Diagnostic[] = [];
@@ -32,6 +33,7 @@ export function compileValidateV1(spec: unknown): { ok: boolean; diagnostics: Di
         return { ok: false, diagnostics };
     }
 
-    // Normalization can be added here later (Phase 2 can call Phase 1 normalizer if it exists)
-    return { ok: true, diagnostics, normalized: typed };
+    // Normalization
+    const normalized = normalizeDesignSpecV1(typed);
+    return { ok: true, diagnostics, normalized };
 }

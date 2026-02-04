@@ -1,0 +1,85 @@
+{
+  "sessionId": "sess_ml8b4101_7588f7cd",
+  "templateId": "marketplace-shoes",
+  "status": "questions",
+  "userPrompt": "I plan to disrupt the sneaker resale market",
+  "answers": {},
+  "draftSpec": {
+    "draft": true,
+    "draftVersion": "0.1",
+    "intentSummary": "Design a Shoe Marketplace e-commerce platform for a sneaker resale market disruption.",
+    "assumptions": [
+      "Access to multiple suppliers and vendors",
+      "Integration with payment gateways and shipping providers"
+    ],
+    "openQuestions": [
+      {
+        "key": "auth.mode",
+        "question": "How should users access the catalog?",
+        "default": "public_browse",
+        "options": [
+          "public_browse",
+          "all_private"
+        ]
+      },
+      {
+        "key": "ecommerce.catalog.type",
+        "question": "Is this a single-vendor store or a multi-vendor marketplace?",
+        "default": "multi_vendor",
+        "options": [
+          "single_vendor",
+          "multi_vendor"
+        ]
+      },
+      {
+        "key": "payments.provider",
+        "question": "Which payment provider will be used?",
+        "default": "stripe",
+        "options": [
+          "stripe",
+          "paypal",
+          "none"
+        ]
+      }
+    ],
+    "specCandidate": {
+      "name": "",
+      "crossCutting": {
+        "auth": {
+          "jwt": {
+            "issuer": "",
+            "audience": "",
+            "jwksUri": ""
+          }
+        }
+      },
+      "domains": [
+        {
+          "name": "",
+          "key": "",
+          "entities": [],
+          "services": []
+        }
+      ]
+    },
+    "crud": [
+      "create",
+      "findAll",
+      "findOne",
+      "update",
+      "delete"
+    ],
+    "authz": {
+      "required": true,
+      "scopesAll": false
+    }
+  },
+  "history": [
+    {
+      "step": "S1_DraftSpecFromPrompt",
+      "ts": "2026-02-04T17:33:52.273Z",
+      "inputHash": "491434e7400504e72802cad808f204a98971df238204f7d645cb41e0a45ae258",
+      "outputHash": "6540d70747d17cb84e5d4a92389f46657edc3acc4eca588c3ebd10eecd881689"
+    }
+  ]
+}

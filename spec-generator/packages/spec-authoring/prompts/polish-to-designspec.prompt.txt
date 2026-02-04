@@ -25,12 +25,9 @@ CRITICAL:
 - DTO-related note: Do not create fields with type "any". Use json for free-form.
 - If auth.mode indicates public browse, keep search/category endpoints public.
 - If auth.mode indicates all_private, all endpoints must be protected (no required:false).
-- If payments.provider is "none", keep payment operation but mark it as a placeholder? NO.
-  Remove Pay operation entirely if payments.provider="none".
+- If payments.provider="none", do not add any payment-related custom operations.
 - If email.provider="none", do not add any email-related custom operations.
-- Delivery:
-  - if delivery.provider="none", remove delivery-related operations
-  - else keep an order status endpoint public? NO. Keep status protected by default.
+- If delivery.provider="none", do not add any delivery-related custom operations.
 - Output must satisfy DesignSpecV1 exactly
 - allowed types: int|string|boolean|json
 - required operation authz shape must be one of:

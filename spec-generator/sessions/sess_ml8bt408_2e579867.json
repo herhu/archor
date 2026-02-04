@@ -1,0 +1,62 @@
+{
+  "sessionId": "sess_ml8bt408_2e579867",
+  "templateId": "product.v1",
+  "status": "questions",
+  "userPrompt": "I want a high-end sneaker marketplace",
+  "answers": {},
+  "draftSpec": {
+    "draft": true,
+    "draftVersion": "0.1",
+    "intentSummary": "Design a high-end sneaker marketplace with advanced authentication and domain management.",
+    "assumptions": [
+      "users have an account on the platform",
+      "sneakers are available for sale"
+    ],
+    "openQuestions": [
+      {
+        "key": "app.name",
+        "question": "What is the name of your sneaker marketplace?",
+        "default": "",
+        "options": []
+      },
+      {
+        "key": "auth.mode",
+        "question": "How should authentication be handled on the platform?",
+        "default": "private_all",
+        "options": [
+          "public_all",
+          "private_all",
+          "mixed"
+        ]
+      }
+    ],
+    "specCandidate": {
+      "name": "",
+      "crossCutting": {
+        "auth": {
+          "jwt": {
+            "issuer": "",
+            "audience": "",
+            "jwksUri": ""
+          }
+        }
+      },
+      "domains": [
+        {
+          "name": "",
+          "key": "",
+          "entities": [],
+          "services": []
+        }
+      ]
+    }
+  },
+  "history": [
+    {
+      "step": "S1_DraftSpecFromPrompt",
+      "ts": "2026-02-04T17:53:22.568Z",
+      "inputHash": "c053a88844882e24a0dbb3f6eccb838bc3c8e50ff43b744963397bdda34d165d",
+      "outputHash": "bc53b7be72e3dfdfb5f9be42e59d0830520211c8b6f2f6ab24121b1f4e7ecea4"
+    }
+  ]
+}

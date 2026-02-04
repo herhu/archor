@@ -69,7 +69,9 @@ export type SpecSession = {
     diagnostics?: Diagnostic[];
 
     finalSpec?: any;
+    confirmationMd?: string;
     approval?: Approval;
 
     history: StepHistory[];
+    openQuestions?: OpenQuestion[];
 };

@@ -1,0 +1,58 @@
+{
+    "id": "marketplace-shoes",
+    "prompts": {
+        "draft": "You are a specialized architect for a Shoe Marketplace e-commerce platform.\nIn addition to general requirements, you should focus on:\n- Multi-vendor catalog capabilities\n- Shoe-specific attributes (size, fit, brand, material)\n- Inventory management at the SKU level\n- Orders with multi-vendor split capabilities\n",
+        "polish": "Standard polish rules apply."
+    },
+    "questions": [
+        {
+            "key": "auth.mode",
+            "question": "How should users access the catalog?",
+            "type": "select",
+            "default": "public_browse",
+            "options": ["public_browse", "all_private"]
+        },
+        {
+            "key": "ecommerce.catalog.type",
+            "question": "Is this a single-vendor store or a multi-vendor marketplace?",
+            "type": "select",
+            "default": "multi_vendor",
+            "options": ["single_vendor", "multi_vendor"]
+        },
+        {
+            "key": "payments.provider",
+            "question": "Which payment provider will be used?",
+            "type": "select",
+            "default": "stripe",
+            "options": ["stripe", "paypal", "none"]
+        },
+        {
+            "key": "email.provider",
+            "question": "Which email service provider will be used?",
+            "type": "select",
+            "default": "sendgrid",
+            "options": ["sendgrid", "ses", "none"]
+        },
+        {
+            "key": "delivery.provider",
+            "question": "Which delivery/shipping provider integration?",
+            "type": "select",
+            "default": "shippo",
+            "options": ["shippo", "none"]
+        },
+        {
+            "key": "inventory.mode",
+            "question": "How complex is the inventory management?",
+            "type": "select",
+            "default": "warehouse",
+            "options": ["simple", "warehouse"]
+        },
+        {
+            "key": "currency",
+            "question": "What is the primary currency strategy?",
+            "type": "select",
+            "default": "USD",
+            "options": ["USD", "EUR", "multi"]
+        }
+    ]
+}

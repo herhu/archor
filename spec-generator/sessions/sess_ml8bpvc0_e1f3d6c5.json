@@ -1,0 +1,86 @@
+{
+  "sessionId": "sess_ml8bpvc0_e1f3d6c5",
+  "templateId": "product.v1",
+  "status": "questions",
+  "userPrompt": "I want a high-end sneaker marketplace",
+  "answers": {},
+  "draftSpec": {
+    "draft": true,
+    "draftVersion": "0.1",
+    "intentSummary": "Design a high-end sneaker marketplace with advanced authentication and domain management.",
+    "assumptions": [
+      "customers have knowledge of the sneaker market",
+      "developers have experience with frontend frameworks"
+    ],
+    "openQuestions": [
+      {
+        "key": "app.name",
+        "question": "What is the name of your application?",
+        "default": "",
+        "options": [
+          "My Sneaker Market",
+          "SneakerHub"
+        ]
+      },
+      {
+        "key": "auth.mode",
+        "question": "Authentication mode?",
+        "default": "private_all",
+        "options": [
+          "public_all",
+          "private_all",
+          "mixed"
+        ]
+      },
+      {
+        "key": "core.domain",
+        "question": "What is the core domain entity? (e.g. 'task', 'project')",
+        "default": "sneaker",
+        "options": [
+          "sneaker",
+          "collection",
+          "user"
+        ]
+      }
+    ],
+    "specCandidate": {
+      "name": "",
+      "crossCutting": {
+        "auth": {
+          "jwt": {
+            "issuer": "",
+            "audience": "",
+            "jwksUri": ""
+          }
+        }
+      },
+      "domains": [
+        {
+          "name": "",
+          "key": "",
+          "entities": [],
+          "services": []
+        }
+      ]
+    },
+    "crud": [
+      "create",
+      "findAll",
+      "findOne",
+      "update",
+      "delete"
+    ],
+    "authz": {
+      "required": false,
+      "scopesAll": true
+    }
+  },
+  "history": [
+    {
+      "step": "S1_DraftSpecFromPrompt",
+      "ts": "2026-02-04T17:50:51.360Z",
+      "inputHash": "c053a88844882e24a0dbb3f6eccb838bc3c8e50ff43b744963397bdda34d165d",
+      "outputHash": "d45bdf3ddaa52776a8c9e0dd619e5a041f4a0e1197f30dd55c068eb2f32f1eca"
+    }
+  ]
+}

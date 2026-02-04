@@ -1,0 +1,56 @@
+{
+  "sessionId": "sess_ml8cfeve_b5e0f065",
+  "templateId": "product.v1",
+  "status": "questions",
+  "userPrompt": "I want a high-end sneaker marketplace",
+  "answers": {},
+  "draftSpec": {
+    "draft": true,
+    "draftVersion": "0.1",
+    "intentSummary": null,
+    "assumptions": [],
+    "openQuestions": [
+      {
+        "key": "app.name",
+        "question": "What is the name of your application?",
+        "default": "My Sneaker Marketplace",
+        "options": []
+      },
+      {
+        "key": "app.purpose",
+        "question": "What is the primary purpose?",
+        "default": "Manage sneaker inventory and sales",
+        "options": []
+      }
+    ],
+    "specCandidate": {
+      "name": "",
+      "crossCutting": {
+        "auth": {
+          "jwt": {
+            "issuer": "",
+            "audience": "",
+            "jwksUri": ""
+          }
+        }
+      },
+      "domains": [],
+      "services": [],
+      "crud": [
+        "create",
+        "findAll",
+        "findOne",
+        "update",
+        "delete"
+      ]
+    }
+  },
+  "history": [
+    {
+      "step": "S1_DraftSpecFromPrompt",
+      "ts": "2026-02-04T18:10:43.082Z",
+      "inputHash": "c053a88844882e24a0dbb3f6eccb838bc3c8e50ff43b744963397bdda34d165d",
+      "outputHash": "60320c89ea3bb45d42de8e1e8fe2bab34c0f8bda24955356667bcc6edc05e670"
+    }
+  ]
+}

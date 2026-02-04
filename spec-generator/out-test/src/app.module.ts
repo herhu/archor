@@ -1,0 +1,61 @@
+import { Module, NestModule, MiddlewareConsumer } from "@nestjs/common";
+import { ConfigModule } from "./shared/config/config.module";
+import { ConfigService } from "@nestjs/config";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { LoggerModule } from "./shared/logging/logger.module";
+import { HealthModule } from "./shared/health/health.module";
+import { CorrelationIdMiddleware } from "./shared/middleware/correlation-id.middleware";
+import { ThrottlerModule } from "@nestjs/throttler";
+import { APP_GUARD } from "@nestjs/core";
+import { ThrottlerGuard } from "@nestjs/throttler";
+
+import { PatientModule } from "./modules/patient/patient.module";
+
+@Module({
+  imports: [
+    ConfigModule,
+    LoggerModule,
+
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        type: "postgres",
+        url: configService.get<string>("DATABASE_URL"),
+        autoLoadEntities: true,
+        synchronize: configService.get<string>("NODE_ENV") !== "production", // Safe default
+        ssl:
+          configService.get<string>("DATABASE_SSL") === "true"
+            ? { rejectUnauthorized: false }
+            : false,
+      }),
+      inject: [ConfigService],
+    }),
+
+    ThrottlerModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => [
+        {
+          ttl: Number(configService.get("RATE_LIMIT_TTL") ?? 60),
+          limit: Number(configService.get("RATE_LIMIT_MAX") ?? 100),
+        },
+      ],
+      inject: [ConfigService],
+    }),
+
+    HealthModule,
+
+    // Domain modules
+    PatientModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
+})
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(CorrelationIdMiddleware).forRoutes("*");
+  }
+}

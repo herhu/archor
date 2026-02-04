@@ -1,0 +1,89 @@
+{
+  "sessionId": "sess_ml8c3om6_1ea0fda2",
+  "templateId": "product.v1",
+  "status": "questions",
+  "userPrompt": "I want a high-end sneaker marketplace",
+  "answers": {},
+  "draftSpec": {
+    "draft": true,
+    "draftVersion": "0.1",
+    "intentSummary": "Design and implement a high-end sneaker marketplace with secure authentication and database integration.",
+    "assumptions": [
+      "Marketplace users will provide personal data for account creation and purchase history tracking."
+    ],
+    "openQuestions": [
+      {
+        "key": "authMode",
+        "question": "What is the primary authentication mode?",
+        "default": "private_all",
+        "options": [
+          "public_all",
+          "private_all",
+          "mixed"
+        ]
+      },
+      {
+        "key": "domainPurpose",
+        "question": "What is the core domain entity for marketplace data storage and retrieval?",
+        "default": "product",
+        "options": [
+          "product",
+          "user",
+          "order"
+        ]
+      }
+    ],
+    "specCandidate": {
+      "name": "HighEndSneakerMarketplace",
+      "crossCutting": {
+        "auth": {
+          "jwt": {
+            "issuer": "https://example.com",
+            "audience": "marketplace_users",
+            "jwksUri": "https://example.com/jwks.json"
+          }
+        }
+      },
+      "domains": [
+        {
+          "name": "Marketplace",
+          "key": "product",
+          "entities": [],
+          "services": [
+            "createOrder",
+            "getProductDetails"
+          ]
+        },
+        {
+          "name": "User",
+          "key": "user",
+          "entities": [],
+          "services": [
+            "login",
+            "logout"
+          ]
+        }
+      ]
+    },
+    "crud": [
+      "create",
+      "findAll",
+      "findOne",
+      "update",
+      "delete"
+    ],
+    "authz": {
+      "required": true,
+      "scopesAll": false
+    },
+    "publicEndpoints": true
+  },
+  "history": [
+    {
+      "step": "S1_DraftSpecFromPrompt",
+      "ts": "2026-02-04T18:01:35.838Z",
+      "inputHash": "c053a88844882e24a0dbb3f6eccb838bc3c8e50ff43b744963397bdda34d165d",
+      "outputHash": "a571c7ac62b8d723214520b7951c700b817e2032fba85b67f02e538fcd0951f0"
+    }
+  ]
+}
