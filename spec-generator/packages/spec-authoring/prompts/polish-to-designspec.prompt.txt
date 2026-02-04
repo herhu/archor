@@ -13,6 +13,7 @@ CRITICAL:
 - Do NOT guess values to “make it work”.
 - Do NOT add placeholder fields.
 - The output will be rejected by a strict JSON Schema validator.
+- Schema correctness is more important than completeness.
 
 - You must output a valid "DesignSpec v1" object ONLY. (no draft wrapper keys).
 - Keep the v1 structure: name, crossCutting.auth.jwt, domains[].{name,key,entities,services}

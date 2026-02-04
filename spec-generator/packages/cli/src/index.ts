@@ -2,6 +2,7 @@ import { Command } from "commander";
 import { registerSpecCommands } from "./commands/spec";
 import { registerValidateCommand } from "./commands/validate";
 import { registerGenerateCommand } from "./commands/generate";
+import { registerServeCommand } from "./commands/serve";
 
 const program = new Command();
 
@@ -13,5 +14,6 @@ program
 registerSpecCommands(program);
 registerValidateCommand(program);
 registerGenerateCommand(program);
+registerServeCommand(program);
 
 program.parse(process.argv);

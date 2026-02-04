@@ -1,0 +1,43 @@
+{
+    "id": "product.v1",
+    "label": "Generic Product Foundation",
+    "description": "Template for a generic web application with auth and database.",
+    "defaults": {
+        "authMode": "private_all"
+    },
+    "steps": [
+        {
+            "key": "app.name",
+            "type": "string",
+            "required": true,
+            "prompt": "What is the name of your application?",
+            "example": "My Todo App"
+        },
+        {
+            "key": "app.purpose",
+            "type": "string",
+            "required": true,
+            "prompt": "What is the primary purpose?",
+            "example": "Manage personal tasks"
+        },
+        {
+            "key": "auth.mode",
+            "type": "enum",
+            "required": true,
+            "prompt": "Authentication mode?",
+            "defaultFrom": "defaults.authMode",
+            "options": [
+                "public_all",
+                "private_all",
+                "mixed"
+            ]
+        },
+        {
+            "key": "core.domain",
+            "type": "string",
+            "required": true,
+            "prompt": "What is the core domain entity? (e.g. 'task', 'project')",
+            "example": "task"
+        }
+    ]
+}

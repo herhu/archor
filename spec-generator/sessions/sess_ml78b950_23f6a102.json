@@ -1,0 +1,72 @@
+{
+  "sessionId": "sess_ml78b950_23f6a102",
+  "templateId": "product.v1",
+  "status": "questions",
+  "userPrompt": "I want a simple todo app for personal use",
+  "answers": {},
+  "draftSpec": {
+    "draft": true,
+    "draftVersion": "0.1",
+    "intentSummary": "Create a simple Todo App for personal use.",
+    "assumptions": [
+      "User has basic knowledge of the web"
+    ],
+    "openQuestions": [
+      {
+        "key": "app.name",
+        "question": "What is the name of your application?",
+        "default": "",
+        "options": []
+      },
+      {
+        "key": "auth.mode",
+        "question": "Authentication mode?",
+        "default": "private_all",
+        "options": [
+          "public_all",
+          "private_all",
+          "mixed"
+        ]
+      }
+    ],
+    "specCandidate": {
+      "name": "",
+      "crossCutting": {
+        "auth": {
+          "jwt": {
+            "issuer": "",
+            "audience": "",
+            "jwksUri": ""
+          }
+        }
+      },
+      "domains": [
+        {
+          "name": "",
+          "key": "",
+          "entities": [],
+          "services": []
+        }
+      ]
+    },
+    "crud": [
+      "create",
+      "findAll",
+      "findOne",
+      "update",
+      "delete"
+    ],
+    "authz": {
+      "required": true,
+      "scopesAll": false
+    }
+  },
+  "history": [
+    {
+      "step": "S1_DraftSpecFromPrompt",
+      "ts": "2026-02-03T23:27:44.388Z",
+      "inputHash": "4688a6e6b0b4371719e9b624eabdd18077b587e64fcbe1973054560d26fdc409",
+      "outputHash": "0605d07bb16df3435188466626f57b617c4bddcdd63ed2108a5c089d1fe73b73"
+    }
+  ]
+}

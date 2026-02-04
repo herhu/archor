@@ -4,8 +4,8 @@
         "host": "http://127.0.0.1:11434",
         "models": {
             "draft": "llama3.2:3b",
-            "polish": "llama3.1:8b",
-            "repair": "qwen2.5-coder:7b"
+            "polish": "llama3.2:3b",
+            "repair": "llama3.2:3b"
         },
         "temperature": {
             "draft": 0.3,
