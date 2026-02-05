@@ -58,6 +58,9 @@ export async function generateApp(spec: DesignSpec, outDir: string, dryRun: bool
     // 1.5 Generate Injected Modules
     await generateInjectedModules(spec, outDir, templatesDir, dryRun);
 
+    // 1.55 Generate Docker
+    await generateDocker(spec, outDir, templatesDir, dryRun);
+
     // 1.6 Generate Platform
     await generatePlatform(spec, outDir, templatesDir, dryRun, context);
 
@@ -329,10 +332,18 @@ async function generateScripts(spec: DesignSpec, outDir: string, tplDir: string,
     await writeArtifact(path.join(scriptsDir, 'get-token.sh'), getTokenContent, dryRun);
     await writeArtifact(path.join(scriptsDir, 'curl.sh'), curlTpl, dryRun);
 
+    const dockerUpTpl = await fs.readFile(path.join(tplDir, 'scripts/docker-up.sh.hbs'), 'utf-8');
+    await writeArtifact(path.join(scriptsDir, 'docker-up.sh'), dockerUpTpl, dryRun);
+
+    const dockerDownTpl = await fs.readFile(path.join(tplDir, 'scripts/docker-down.sh.hbs'), 'utf-8');
+    await writeArtifact(path.join(scriptsDir, 'docker-down.sh'), dockerDownTpl, dryRun);
+
     if (!dryRun) {
         try {
             await fs.chmod(path.join(scriptsDir, 'get-token.sh'), '755');
             await fs.chmod(path.join(scriptsDir, 'curl.sh'), '755');
+            await fs.chmod(path.join(scriptsDir, 'docker-up.sh'), '755');
+            await fs.chmod(path.join(scriptsDir, 'docker-down.sh'), '755');
         } catch (e) { }
     }
 }
@@ -560,4 +571,22 @@ async function generatePlatform(spec: DesignSpec, outDir: string, tplDir: string
     await render('shared/health/health.service.ts.hbs', 'src/shared/health/health.service.ts');
 
     await render('shared/swagger/swagger.ts.hbs', 'src/shared/swagger/swagger.ts');
+}
+
+async function generateDocker(spec: DesignSpec, outDir: string, tplDir: string, dryRun: boolean) {
+    // Dockerfile
+    const dockerfileTpl = await fs.readFile(path.join(tplDir, 'nestjs/Dockerfile.hbs'), 'utf-8');
+    await writeArtifact(path.join(outDir, 'Dockerfile'), dockerfileTpl, dryRun);
+
+    // .dockerignore
+    const ignoreTpl = await fs.readFile(path.join(tplDir, 'nestjs/dockerignore.hbs'), 'utf-8');
+    await writeArtifact(path.join(outDir, '.dockerignore'), ignoreTpl, dryRun);
+
+    // .env.docker
+    const envDockerTpl = await fs.readFile(path.join(tplDir, 'nestjs/env.docker.hbs'), 'utf-8');
+    await writeArtifact(path.join(outDir, '.env.docker'), envDockerTpl, dryRun);
+
+    // docker-compose.yml
+    const composeTpl = await fs.readFile(path.join(tplDir, 'nestjs/docker-compose.yml.hbs'), 'utf-8');
+    await writeArtifact(path.join(outDir, 'docker-compose.yml'), composeTpl, dryRun);
 }
