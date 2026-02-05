@@ -3,132 +3,21 @@ import { DesignSpec } from "./spec";
 
 const ajv = new Ajv({ allErrors: true });
 
-// Basic checking, will generate a comprehensive schema later if needed.
-const specSchema = {
-    type: "object",
-    required: ["name", "domains"],
-    properties: {
-        name: { type: "string", minLength: 1 },
-        crossCutting: {
-            type: "object",
-            additionalProperties: false,
-            properties: {
-                auth: {
-                    type: "object",
-                    additionalProperties: false,
-                    properties: {
-                        jwt: {
-                            type: "object",
-                            additionalProperties: false,
-                            properties: {
-                                issuer: { type: "string" },
-                                audience: { type: "string" },
-                                jwksUri: { type: "string" }
-                            },
-                            required: ["issuer", "audience"]
-                        }
-                    }
-                }
-            }
-        },
-        domains: {
-            type: "array",
-            minItems: 1,
-            items: {
-                type: "object",
-                additionalProperties: false,
-                properties: {
-                    name: { type: "string" },
-                    key: { type: "string", pattern: "^[a-z0-9-]+$" },
-                    entities: {
-                        type: "array",
-                        minItems: 1,
-                        items: {
-                            type: "object",
-                            additionalProperties: false,
-                            properties: {
-                                name: { type: "string" },
-                                primaryKey: { type: "string" },
-                                fields: {
-                                    type: "array",
-                                    minItems: 1,
-                                    items: {
-                                        type: "object",
-                                        additionalProperties: false,
-                                        properties: {
-                                            name: { type: "string" },
-                                            type: { enum: ["string", "boolean", "uuid", "int", "float", "timestamp", "json"] },
-                                            primary: { type: "boolean" },
-                                            nullable: { type: "boolean" }
-                                        },
-                                        required: ["name", "type"]
-                                    }
-                                }
-                            },
-                            required: ["name", "fields"]
-                        }
-                    },
-                    services: {
-                        type: "array",
-                        minItems: 1,
-                        items: {
-                            type: "object",
-                            additionalProperties: false,
-                            properties: {
-                                name: { type: "string" },
-                                route: { type: "string", pattern: "^[a-z0-9-]+$" },
-                                entity: { type: "string" },
-                                crud: {
-                                    type: "array",
-                                    items: { enum: ["create", "findAll", "findOne", "update", "delete"] }
-                                },
-                                operations: {
-                                    type: "array",
-                                    items: {
-                                        type: "object",
-                                        additionalProperties: false,
-                                        properties: {
-                                            name: { type: "string" },
-                                            method: { enum: ["GET", "POST", "PUT", "PATCH", "DELETE"] },
-                                            path: { type: "string", pattern: "^/.*" },
-                                            authz: {
-                                                type: "object",
-                                                additionalProperties: false,
-                                                properties: {
-                                                    required: { type: "boolean" },
-                                                    scopesAll: {
-                                                        type: "array",
-                                                        items: { type: "string", pattern: "^[a-z0-9-]+:[a-z]+$" }
-                                                    }
-                                                }
-                                            },
-                                            request: {
-                                                type: "object",
-                                                additionalProperties: false,
-                                                properties: {
-                                                    schemaRef: { type: "string" }
-                                                }
-                                            }
-                                        },
-                                        required: ["name", "method", "path"]
-                                    }
-                                }
-                            },
-                            required: ["name", "route"]
-                        }
-                    }
-                },
-                required: ["name", "key"]
-            }
-        }
-    }
-};
+import * as specSchema from "./designspec.schema.json";
+
+export { specSchema };
 
 export function validateSpecSchema(spec: any): string[] {
     const validate = ajv.compile(specSchema);
     const valid = validate(spec);
-    if (valid) return [];
-    return validate.errors?.map(e => `${e.instancePath} ${e.message}`) || ["Unknown schema error"];
+    const errors = validate.errors?.map(e => `${e.instancePath} ${e.message}`) || [];
+
+    // Explicit version check if schema didn't catch it (though schema pattern should)
+    if (spec.version && !spec.version.startsWith("1.")) {
+        errors.push("Spec version must start with '1.'");
+    }
+
+    return errors;
 }
 
 export function validateSpecSemantic(spec: DesignSpec): string[] {

@@ -12,6 +12,9 @@ import { ThrottlerGuard } from '@nestjs/throttler';
 {{#each domainModules}}
 import { {{this.className}} } from '{{this.importPath}}';
 {{/each}}
+{{#each injectedModules}}
+import { {{this.className}} } from '{{this.importPath}}';
+{{/each}}
 
 @Module({
 imports: [
@@ -47,6 +50,11 @@ url: configService.get<string>('DATABASE_URL'),
 
             // Domain modules
             {{#each domainModules}}
+            {{this.className}},
+            {{/each}}
+
+            // Injected modules
+            {{#each injectedModules}}
             {{this.className}},
             {{/each}}
             ],

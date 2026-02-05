@@ -1,5 +1,8 @@
 export interface DesignSpec {
+    version: string;
     name: string;
+    platform?: PlatformConfig;
+    modules?: ModuleConfig[];
     domains: Domain[];
     crossCutting?: {
         auth?: {
@@ -11,6 +14,23 @@ export interface DesignSpec {
             };
         };
     };
+}
+
+export interface PlatformConfig {
+    cors?: boolean;
+    cookieParser?: boolean;
+    securityHeaders?: boolean;
+    swagger?: boolean;
+    throttling?: boolean;
+    rateLimitTtl?: number;
+    rateLimitMax?: number;
+    maxBodySize?: string;
+}
+
+export interface ModuleConfig {
+    type: string; // 'redis', 'bullmq', etc.
+    name: string;
+    config?: Record<string, any>;
 }
 
 export interface Domain {

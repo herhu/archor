@@ -2,7 +2,8 @@
     "name": "archon",
     "version": "1.0.0",
     "description": "System Architect CLI",
-    "main": "dist/bin/archon.js",
+    "main": "dist/src/index.js",
+    "types": "dist/src/index.d.ts",
     "bin": {
         "archon": "bin/archon.ts"
     },

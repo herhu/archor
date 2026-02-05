@@ -30,11 +30,36 @@ export async function generateApp(spec: DesignSpec, outDir: string, dryRun: bool
         templatesDir = path.join(__dirname, '../../templates'); // Dist mode alternative
     }
 
-    // 1. Scaffold Base App
-    await generateScaffold(spec, outDir, templatesDir, dryRun);
+    // --- Module Injection Metadata Pre-calculation ---
+    const modules = spec.modules || [];
+    const hasRedis = modules.some(m => m.type === 'cache.redis');
+    const hasQueue = modules.some(m => m.type === 'queue.bullmq');
 
-    // 1.5 Generate Platform
-    await generatePlatform(spec, outDir, templatesDir, dryRun);
+    // Prepare list of modules to inject into AppModule
+    const injectedModules: { className: string; importPath: string }[] = [];
+    if (hasRedis) {
+        injectedModules.push({
+            className: 'RedisModule',
+            importPath: './modules/core/redis/redis.module'
+        });
+    }
+    if (hasQueue) {
+        injectedModules.push({
+            className: 'QueueModule',
+            importPath: './modules/core/queue/queue.module'
+        });
+    }
+
+    const context = { hasRedis, hasQueue, injectedModules };
+
+    // 1. Scaffold Base App
+    await generateScaffold(spec, outDir, templatesDir, dryRun, context);
+
+    // 1.5 Generate Injected Modules
+    await generateInjectedModules(spec, outDir, templatesDir, dryRun);
+
+    // 1.6 Generate Platform
+    await generatePlatform(spec, outDir, templatesDir, dryRun, context);
 
     // 2. Generate Modules (Domains)
     for (const domain of spec.domains) {
@@ -54,10 +79,10 @@ export async function generateApp(spec: DesignSpec, outDir: string, dryRun: bool
     await generateScripts(spec, outDir, templatesDir, dryRun);
 }
 
-async function generateScaffold(spec: DesignSpec, outDir: string, tplDir: string, dryRun: boolean) {
+async function generateScaffold(spec: DesignSpec, outDir: string, tplDir: string, dryRun: boolean, context: any) {
     // package.json
     const pkgTpl = await fs.readFile(path.join(tplDir, 'nestjs/package.json.hbs'), 'utf-8');
-    const pkgContent = Handlebars.compile(pkgTpl)({ projectName: spec.name });
+    const pkgContent = Handlebars.compile(pkgTpl)({ projectName: spec.name, ...context });
     await writeArtifact(path.join(outDir, 'package.json'), pkgContent, dryRun);
 
     // tsconfig.json
@@ -71,6 +96,7 @@ async function generateScaffold(spec: DesignSpec, outDir: string, tplDir: string
         jwtIssuer: spec.crossCutting?.auth?.jwt?.issuer,
         jwtAudience: spec.crossCutting?.auth?.jwt?.audience,
         jwtJwksUri: spec.crossCutting?.auth?.jwt?.jwksUri,
+        ...context
     });
     await writeArtifact(path.join(outDir, '.env.example'), envContent, dryRun);
 
@@ -265,6 +291,24 @@ async function generateReadme(spec: DesignSpec, outDir: string, tplDir: string, 
     await writeArtifact(path.join(outDir, 'README.md'), content, dryRun);
 }
 
+// 7.5. Generate Injected Modules
+async function generateInjectedModules(spec: DesignSpec, outDir: string, tplDir: string, dryRun: boolean) {
+    if (!spec.modules || spec.modules.length === 0) return;
+
+    for (const mod of spec.modules) {
+        if (mod.type === 'cache.redis') {
+            const tpl = await fs.readFile(path.join(tplDir, 'modules/redis/redis.module.ts.hbs'), 'utf-8');
+            const content = Handlebars.compile(tpl)({ config: mod.config });
+            await writeArtifact(path.join(outDir, 'src/modules/core/redis/redis.module.ts'), content, dryRun);
+        }
+        else if (mod.type === 'queue.bullmq') {
+            const tpl = await fs.readFile(path.join(tplDir, 'modules/queue/queue.module.ts.hbs'), 'utf-8');
+            const content = Handlebars.compile(tpl)({ config: mod.config });
+            await writeArtifact(path.join(outDir, 'src/modules/core/queue/queue.module.ts'), content, dryRun);
+        }
+    }
+}
+
 // 6. Generate Scripts
 async function generateScripts(spec: DesignSpec, outDir: string, tplDir: string, dryRun: boolean) {
     const scriptsDir = path.join(outDir, 'scripts');
@@ -454,7 +498,7 @@ function exampleBodyForCrud(entity: Entity) {
 }
 
 // 7. Generate Platform Layer
-async function generatePlatform(spec: DesignSpec, outDir: string, tplDir: string, dryRun: boolean) {
+async function generatePlatform(spec: DesignSpec, outDir: string, tplDir: string, dryRun: boolean, extraContext: any = {}) {
     const platformDefaults = {
         cors: true,
         cookieParser: true,
@@ -483,7 +527,8 @@ async function generatePlatform(spec: DesignSpec, outDir: string, tplDir: string
         domainModules,
         apiPrefix,
         port,
-        projectName: spec.name
+        projectName: spec.name,
+        injectedModules: extraContext.injectedModules || []
     };
 
     // Helper to render platform file
