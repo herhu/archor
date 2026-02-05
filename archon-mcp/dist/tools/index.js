@@ -1,6 +1,8 @@
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import * as Archon from "archon";
 import fs from "fs-extra";
+import * as path from "path";
+import { execSync } from "child_process";
 const TOOLS = [
     {
         name: "archon_validate_spec",
@@ -40,6 +42,17 @@ const TOOLS = [
         inputSchema: {
             type: "object",
             properties: {},
+        }
+    },
+    {
+        name: "archon_launch_demo",
+        description: "Luxury final step: Install deps, Setup Env, Run Docker, and Expose via Cloudflared.",
+        inputSchema: {
+            type: "object",
+            properties: {
+                projectDir: { type: "string", description: "Absolute path to the generated project" }
+            },
+            required: ["projectDir"]
         }
     }
 ];
@@ -119,6 +132,48 @@ export function registerTools(server) {
                 const schema = Archon.specSchema;
                 return {
                     content: [{ type: "text", text: JSON.stringify(schema, null, 2) }]
+                };
+            }
+            if (name === "archon_launch_demo") {
+                const projectDir = args?.projectDir;
+                if (!projectDir || !fs.existsSync(projectDir)) {
+                    throw new Error(`Invalid project directory: ${projectDir}`);
+                }
+                const log = (msg) => console.error(`[Launch] ${msg}`);
+                const steps = [];
+                log(`Starting launch sequence for ${projectDir}...`);
+                // 1. npm install
+                log("Installing dependencies...");
+                execSync("npm install", { cwd: projectDir, stdio: "inherit" });
+                steps.push("✅ npm install");
+                // 2. Setup .env
+                const envPath = path.join(projectDir, ".env");
+                if (!fs.existsSync(envPath)) {
+                    log("Creating .env from example...");
+                    fs.copySync(path.join(projectDir, ".env.example"), envPath);
+                    steps.push("✅ .env created");
+                }
+                // 3. Generate Token (simulate or run script)
+                log("Ensuring scripts are executable...");
+                try {
+                    execSync("chmod +x scripts/*.sh", { cwd: projectDir });
+                    steps.push("✅ scripts executable");
+                }
+                catch (e) { }
+                // 4. Docker Compose Up
+                log("Starting Docker containers...");
+                // Run detached
+                execSync("docker compose up -d --build", { cwd: projectDir, stdio: "inherit" });
+                steps.push("✅ docker compose up");
+                // 5. Cloudflared Tunnel
+                log("Starting Cloudflare Tunnel...");
+                const tunnelCmd = `cloudflared tunnel --url http://localhost:3000`;
+                steps.push(`✅ Ready to share! Run this manually: ${tunnelCmd}`);
+                return {
+                    content: [{
+                            type: "text",
+                            text: `🚀 Launch Sequence Complete!\n\n${steps.join("\n")}\n\nTo share your luxury demo with the world, run:\n\n    ${tunnelCmd}\n\nEnjoy!`
+                        }]
                 };
             }
             throw new Error(`Unknown tool: ${name}`);

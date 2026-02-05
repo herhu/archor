@@ -16,10 +16,13 @@ async function main() {
     });
     const client = new Client({ name: "GenTestClient", version: "1.0.0" }, { capabilities: { roots: { listChanged: true } } });
     await client.connect(transport);
-    // Minimal Valid Spec
+    // Spec with Modules
     const spec = {
         version: "1.0.0",
-        name: "test-gen-project",
+        name: "test-gen-modules",
+        modules: [
+            { type: 'cache.redis', name: 'myCache', config: {} }
+        ],
         domains: [
             {
                 name: "TestDomain",
@@ -29,7 +32,7 @@ async function main() {
             }
         ]
     };
-    console.log(`Generating project in ${testOutDir}...`);
+    console.log(`Generating project with Redis in ${testOutDir}...`);
     try {
         const result = await client.request({
             method: "tools/call",
@@ -49,6 +52,21 @@ async function main() {
             console.log("Files found:", files.length);
             if (files.length > 0) {
                 console.log("✅ File generation verified.");
+                const hasRedisFile = fs.existsSync(path.join(testOutDir, 'src/modules/core/redis/redis.module.ts'));
+                if (hasRedisFile)
+                    console.log("✅ Redis module file created.");
+                else
+                    console.error("❌ Redis module file MISSING.");
+                const pkgJson = fs.readFileSync(path.join(testOutDir, 'package.json'), 'utf-8');
+                if (pkgJson.includes("ioredis"))
+                    console.log("✅ package.json contains ioredis.");
+                else
+                    console.error("❌ package.json MISSING ioredis.");
+                const appModule = fs.readFileSync(path.join(testOutDir, 'src/app.module.ts'), 'utf-8');
+                if (appModule.includes("RedisModule"))
+                    console.log("✅ app.module.ts imports RedisModule.");
+                else
+                    console.error("❌ app.module.ts MISSING RedisModule import.");
             }
             else {
                 console.error("❌ Directory is empty!");
