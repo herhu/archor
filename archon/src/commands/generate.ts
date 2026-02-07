@@ -27,7 +27,7 @@ export async function generateCommand(options: { spec: string, out?: string, dry
             process.exit(1);
         }
 
-        console.log(chalk.green(`Loaded spec: ${spec.name}`));
+        console.error(chalk.green(`Loaded spec: ${spec.name}`));
 
         // Default to archon-out if not specified
         const outDir = path.resolve(process.cwd(), options.out || 'archon-out');
@@ -45,21 +45,21 @@ export async function generateCommand(options: { spec: string, out?: string, dry
         await generateApp(spec, outDir, options.dryRun);
 
         if (options.qa !== false) {
-            console.log(chalk.blue(`Running QA Gate...`));
+            console.error(chalk.blue(`Running QA Gate...`));
             try {
                 const cp = require('child_process');
                 // Basic QA: install and build
                 cp.execSync('npm install', { cwd: outDir, stdio: 'inherit' });
                 cp.execSync('npm run format', { cwd: outDir, stdio: 'inherit' });
                 cp.execSync('npm run build', { cwd: outDir, stdio: 'inherit' });
-                console.log(chalk.green(`QA Gate Passed!`));
+                console.error(chalk.green(`QA Gate Passed!`));
             } catch (e) {
                 console.error(chalk.red(`QA Gate Failed!`));
                 process.exit(1);
             }
         }
 
-        console.log(chalk.green(options.dryRun ? 'Dry run complete!' : 'Generation complete!'));
+        console.error(chalk.green(options.dryRun ? 'Dry run complete!' : 'Generation complete!'));
     } catch (err: any) {
         console.error(chalk.red(`Error: ${err.message}`));
         process.exit(1);

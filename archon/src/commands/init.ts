@@ -11,7 +11,7 @@ export async function initCommand(name: string) {
     }
 
     await fs.ensureDir(targetDir);
-    console.log(chalk.green(`Initialized empty Archon project in ${targetDir}`));
+    console.error(chalk.green(`Initialized empty Archon project in ${targetDir}`));
 
     // Create a default designspec.json
     const defaultSpec = {
@@ -29,5 +29,5 @@ export async function initCommand(name: string) {
     };
 
     await fs.writeJSON(path.join(targetDir, 'designspec.json'), defaultSpec, { spaces: 2 });
-    console.log(chalk.blue(`Created designspec.json`));
+    console.error(chalk.blue(`Created designspec.json`));
 }

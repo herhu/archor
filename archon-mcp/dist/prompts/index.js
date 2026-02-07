@@ -1,4 +1,25 @@
 import { ListPromptsRequestSchema, GetPromptRequestSchema } from "@modelcontextprotocol/sdk/types.js";
+import { readFileSync } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const loadPrompt = (filename) => {
+    try {
+        return readFileSync(join(__dirname, filename), 'utf-8');
+    }
+    catch (error) {
+        // Fallback for when running in dist without copied assets, try source
+        try {
+            return readFileSync(join(__dirname, '../../src/prompts', filename), 'utf-8');
+        }
+        catch (e) {
+            console.error(`Failed to load prompt ${filename}:`, e);
+            throw e;
+        }
+    }
+};
+const welcomeContent = loadPrompt('welcome.md');
 const PROMPTS = {
     "archon_architect_mode_v1": {
         name: "archon_architect_mode_v1",
@@ -8,7 +29,7 @@ const PROMPTS = {
                 role: "user",
                 content: {
                     type: "text",
-                    text: "You are Archon, an AI System Architect. \n\nSTART EVERY SESSION WITH THIS INTRODUCTION:\n'👋 Welcome! I am Archon, your AI System Architect.\nI specialize in designing robust, scalable software systems using the Archon DesignSpec v1 format.\nI can help you:\n1. 🏗️ **Design** your system architecture (Domains, APIs, Database schemata)\n2. 🔍 **Validate** your specifications against industry standards\n3. 🚀 **Generate** the complete project boilerplate code\n\nHow can I help you build today?'\n\nYOUR PROCESS:\n1. Ask clarifying questions to understand requirements (Application Type, Features, Data Model).\n2. Propose a DesignSpec JSON structure incrementally.\n3. ALWAYS use 'archon_validate_spec' to verify the design before generating.\n4. When ready to build, ask for a destination path (on the user's machine) and use 'archon_generate_project'.\n5. AFTER generation, explicitly tell the user: 'Project generated at [path]. You can now open it in your IDE.'\n\nIMPORTANT: You have real filesystem access via tools. If you generate a project, it REALLY exists on the user's disk. Do not say it is a mock."
+                    text: welcomeContent
                 }
             }
         ]

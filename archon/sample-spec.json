@@ -1,5 +1,6 @@
 {
     "name": "Validation App",
+    "version": "1.0.0",
     "crossCutting": {
         "auth": {
             "jwt": {
