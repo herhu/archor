@@ -14,7 +14,8 @@
         "@modelcontextprotocol/sdk": "^1.0.1",
         "zod": "^3.22.4",
         "fs-extra": "^11.2.0",
-        "archon": "file:../archon"
+        "archon": "file:../archon",
+        "uml-mcp": "file:../uml-mcp"
     },
     "devDependencies": {
         "@types/node": "^20.10.6",

@@ -4,6 +4,10 @@ import * as Archon from "archon";
 import fs from "fs-extra";
 import * as path from "path";
 import { execSync, spawn } from "child_process";
+// @ts-ignore
+import { AsciiParser } from "uml-mcp/dist/dsl/ascii.js";
+// @ts-ignore
+import { transformIRToDesignSpec } from "uml-mcp/dist/transform/spec.js";
 
 const TOOLS: Tool[] = [
     {
@@ -55,6 +59,19 @@ const TOOLS: Tool[] = [
                 projectDir: { type: "string", description: "Absolute path to the generated project" }
             },
             required: ["projectDir"]
+        }
+    },
+    {
+        name: "archon_generate_from_uml",
+        description: "One-shot conversion: ASCII DSL -> Spec -> Generated Project. Use this for rapid iteration from diagrams.",
+        inputSchema: {
+            type: "object",
+            properties: {
+                dsl: { type: "string", description: "The ASCII DSL text." },
+                outDir: { type: "string", description: "Absolute path to output directory." },
+                dryRun: { type: "boolean", description: "If true, simulate generation." }
+            },
+            required: ["dsl", "outDir"]
         }
     }
 ];
@@ -161,29 +178,41 @@ export function registerTools(server: Server) {
 
                 // 1. npm install
                 log("Installing dependencies...");
-                execSync("npm install", { cwd: projectDir, stdio: "inherit" });
-                steps.push("✅ npm install");
+                try {
+                    execSync("npm install", { cwd: projectDir, stdio: "ignore" });
+                    steps.push("✅ npm install");
+                } catch (e: any) {
+                    steps.push("❌ npm install failed");
+                    throw new Error(`npm install failed: ${e.message}`);
+                }
 
                 // 2. Setup .env
                 const envPath = path.join(projectDir, ".env");
                 if (!fs.existsSync(envPath)) {
                     log("Creating .env from example...");
-                    fs.copySync(path.join(projectDir, ".env.example"), envPath);
-                    steps.push("✅ .env created");
+                    try {
+                        fs.copySync(path.join(projectDir, ".env.example"), envPath);
+                        steps.push("✅ .env created");
+                    } catch (e) { }
                 }
 
-                // 3. Generate Token (simulate or run script)
+                // 3. Generate Token
                 log("Ensuring scripts are executable...");
                 try {
-                    execSync("chmod +x scripts/*.sh", { cwd: projectDir });
+                    execSync("chmod +x scripts/*.sh", { cwd: projectDir, stdio: "ignore" });
                     steps.push("✅ scripts executable");
                 } catch (e) { }
 
                 // 4. Docker Compose Up
                 log("Starting Docker containers...");
-                // Run detached
-                execSync("docker compose up -d --build", { cwd: projectDir, stdio: "inherit" });
-                steps.push("✅ docker compose up");
+                try {
+                    // Capture output to avoid breaking MCP protocol
+                    execSync("docker compose up -d --build", { cwd: projectDir, stdio: "pipe" });
+                    steps.push("✅ docker compose up");
+                } catch (e: any) {
+                    const stderr = e.stderr ? e.stderr.toString() : e.message;
+                    throw new Error(`Docker compose failed:\n${stderr}`);
+                }
 
                 // 5. Cloudflared Tunnel
                 log("Starting Cloudflare Tunnel...");
@@ -195,6 +224,47 @@ export function registerTools(server: Server) {
                     content: [{
                         type: "text",
                         text: `🚀 Launch Sequence Complete!\n\n${steps.join("\n")}\n\nTo share your luxury demo with the world, run:\n\n    ${tunnelCmd}\n\nEnjoy!`
+                    }]
+                };
+            }
+
+            if (name === "archon_generate_from_uml") {
+                const dsl = args?.dsl as string;
+                const outDir = args?.outDir as string;
+                const dryRun = args?.dryRun as boolean ?? false;
+                
+                if (!dsl || !outDir) throw new Error("Missing arguments");
+
+                // 1. Parse
+                const parser = new AsciiParser();
+                const ir = parser.parse(dsl);
+                if (ir.warnings && ir.warnings.find((w: any) => w.severity === 'error')) {
+                     // If we have errors, should we stop? Yes.
+                     const errors = ir.warnings.filter((w: any) => w.severity === 'error').map((w: any) => w.message).join("\n");
+                     throw new Error(`DSL Parsing Errors:\n${errors}`);
+                }
+
+                console.error(`[Archon] Parsing successful. DSL:\n${dsl}`);
+
+                // 2. Transform
+                // Need to ensure IR matches what transform expects (types). 
+                // Since this is runtime JS/TS, it should be fine.
+                const spec = transformIRToDesignSpec(ir);
+
+                // 3. Generate
+                // Use existing generation logic from Archon
+                // Validate spec first
+                const validationErrors = [...Archon.validateSpecSchema(spec), ...Archon.validateSpecSemantic(spec as Archon.DesignSpec)];
+                if (validationErrors.length > 0) {
+                     throw new Error(`Generated Spec Invalid:\n${validationErrors.join("\n")}`);
+                }
+
+                await Archon.generateApp(spec as Archon.DesignSpec, outDir, dryRun);
+
+                return {
+                    content: [{
+                        type: "text",
+                        text: `✅ Project generated from UML at ${outDir}!\n\n📋 **Design Source (DSL):**\n\`\`\`\n${dsl}\n\`\`\``
                     }]
                 };
             }
