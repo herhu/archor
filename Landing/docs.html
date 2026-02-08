@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Archon Docs — Install & Use in Claude (MCP)</title>
+    <meta name="description"
+        content="Install Archon MCP in Claude Desktop. Use local stdio for development or Managed MCP Cloud for teams. Validate DesignSpec and generate a production backend with Docker proof." />
+    <style>
+        :root {
+            --bg: #0b0f14;
+            --panel: #101824;
+            --text: #e7eef8;
+            --muted: #a9b7c9;
+            --brand: #7c5cff;
+            --brand2: #35d0ff;
+            --line: rgba(255, 255, 255, .08);
+            --shadow: 0 16px 48px rgba(0, 0, 0, .35);
+            --radius: 18px;
+            --ok: #59ffa8;
+            --warn: #ffd36e;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+            background: radial-gradient(1200px 800px at 20% 0%, rgba(124, 92, 255, .18), transparent 60%),
+                radial-gradient(1200px 800px at 90% 10%, rgba(53, 208, 255, .12), transparent 55%),
+                var(--bg);
+            color: var(--text);
+            line-height: 1.55;
+        }
+
+        a {
+            color: inherit
+        }
+
+        .container {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 24px
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 14px 18px;
+            border: 1px solid var(--line);
+            background: rgba(16, 24, 36, .6);
+            backdrop-filter: blur(10px);
+            border-radius: 999px;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 14px;
+            z-index: 10;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            font-weight: 1000
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--brand), var(--brand2));
+            box-shadow: 0 0 0 4px rgba(124, 92, 255, .14)
+        }
+
+        .nav a {
+            text-decoration: none;
+            color: var(--muted);
+            font-weight: 800;
+            padding: 8px 10px;
+            border-radius: 10px
+        }
+
+        .nav a:hover {
+            color: var(--text);
+            background: rgba(255, 255, 255, .06)
+        }
+
+        .cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, rgba(124, 92, 255, .95), rgba(53, 208, 255, .9));
+            color: #06101a;
+            font-weight: 1000;
+            text-decoration: none;
+            box-shadow: 0 14px 36px rgba(124, 92, 255, .25)
+        }
+
+        .cta small {
+            opacity: .85
+        }
+
+        .card {
+            border: 1px solid var(--line);
+            background: rgba(16, 24, 36, .55);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 20px;
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            letter-spacing: -.6px;
+            line-height: 1.1
+        }
+
+        h2 {
+            margin: 0 0 10px;
+            letter-spacing: -.2px;
+            font-size: 20px
+        }
+
+        h3 {
+            margin: 0 0 8px;
+            font-size: 16px;
+            color: var(--text)
+        }
+
+        p {
+            margin: 10px 0;
+            color: var(--muted)
+        }
+
+        .section {
+            padding: 14px 0
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px
+        }
+
+        @media(max-width:880px) {
+            .grid {
+                grid-template-columns: 1fr
+            }
+
+            .topbar {
+                position: static
+            }
+        }
+
+        .code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 12px;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: rgba(15, 22, 33, .85);
+            padding: 12px;
+            overflow: auto;
+            color: var(--text)
+        }
+
+        ul {
+            margin: 10px 0 0;
+            padding-left: 18px;
+            color: var(--muted)
+        }
+
+        li {
+            margin: 6px 0
+        }
+
+        .pill {
+            display: inline-flex;
+            gap: 10px;
+            align-items: center;
+            padding: 10px 12px;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: rgba(15, 22, 33, .75);
+            color: var(--muted);
+            font-weight: 800
+        }
+
+        .kbd {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+            background: rgba(0, 0, 0, .25);
+            color: var(--text)
+        }
+
+        .callout {
+            padding: 14px;
+            border: 1px solid rgba(124, 92, 255, .22);
+            background: linear-gradient(135deg, rgba(124, 92, 255, .18), rgba(53, 208, 255, .10));
+            border-radius: 16px;
+            color: var(--text)
+        }
+
+        .check {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            padding: 12px;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: rgba(15, 22, 33, .7)
+        }
+
+        .icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 1000;
+            flex: 0 0 auto
+        }
+
+        .ok {
+            background: rgba(89, 255, 168, .08);
+            border: 1px solid rgba(89, 255, 168, .18);
+            color: var(--ok)
+        }
+
+        .warn {
+            background: rgba(255, 211, 110, .08);
+            border: 1px solid rgba(255, 211, 110, .18);
+            color: var(--warn)
+        }
+
+        .footer {
+            margin-top: 18px;
+            padding: 18px 0 26px;
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+            font-size: 13px
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header class="topbar">
+            <div class="logo"><span class="dot"></span><span>Archon Docs</span></div>
+            <nav class="nav">
+                <a href="#quickstart">Quickstart</a>
+                <a href="#local">Local MCP</a>
+                <a href="#cloud">MCP Cloud</a>
+                <a href="#workflow">Workflow</a>
+                <a href="#troubleshooting">Troubleshooting</a>
+            </nav>
+            <a class="cta" href="#support">Get help <small>→</small></a>
+        </header>
+
+        <main>
+            <section class="section">
+                <div class="card">
+                    <h1>Install Archon in Claude via MCP</h1>
+                    <p>
+                        Archon is a <b>backend architecture compiler</b>. Claude produces a strict <b>DesignSpec</b>,
+                        Archon validates it, then generates a <b>production-grade backend</b> with Docker + Swagger
+                        proof.
+                    </p>
+
+                    <div class="grid" style="margin-top:12px;">
+                        <div class="check">
+                            <div class="icon ok">✓</div>
+                            <div><b>Validated DesignSpec</b>
+                                <div class="muted">Schema + semantic checks</div>
+                            </div>
+                        </div>
+                        <div class="check">
+                            <div class="icon ok">✓</div>
+                            <div><b>Deterministic generator</b>
+                                <div class="muted">Templates, no hallucinations</div>
+                            </div>
+                        </div>
+                        <div class="check">
+                            <div class="icon ok">✓</div>
+                            <div><b>Production baseline</b>
+                                <div class="muted">Auth, logging, health, Docker</div>
+                            </div>
+                        </div>
+                        <div class="check">
+                            <div class="icon warn">!</div>
+                            <div><b>Claude calls tools</b>
+                                <div class="muted">Not free-form code edits</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section" id="quickstart">
+                <div class="card">
+                    <h2>Quickstart (what you’ll do)</h2>
+                    <ul>
+                        <li>Connect Archon as an MCP server (Local or Cloud).</li>
+                        <li>Ask Claude to design your backend → Claude produces a DesignSpec.</li>
+                        <li>Claude calls: <span class="kbd">validate_designspec</span> → <span
+                                class="kbd">generate_project</span> → <span class="kbd">docker_smoke</span>.</li>
+                        <li>You get a runnable repo with Swagger.</li>
+                    </ul>
+
+                    <div class="callout" style="margin-top:12px;">
+                        <b>Recommended:</b> start with Local MCP to pilot. Move to MCP Cloud for team onboarding +
+                        shared workspaces.
+                    </div>
+                </div>
+            </section>
+
+            <section class="section" id="local">
+                <div class="card">
+                    <h2>Local MCP (stdio)</h2>
+                    <p>
+                        Best for pilots and internal use. Runs on your machine; Claude connects via stdio.
+                    </p>
+
+                    <h3>Claude Desktop config (example)</h3>
+                    <div class="code">
+                        {
+                        "mcpServers": {
+                        "archon": {
+                        "command": "node",
+                        "args": ["./archon-mcp/dist/index.js"],
+                        "env": {
+                        "ARCHON_WORKSPACE": "/absolute/path/to/workspace"
+                        }
+                        }
+                        }
+                        }
+                    </div>
+
+                    <p class="muted">
+                        <b>Security:</b> Archon should only write inside <span class="kbd">ARCHON_WORKSPACE</span>.
+                    </p>
+
+                    <h3>Recommended local folder structure</h3>
+                    <div class="code">
+                        /workspace
+                        /projects (generated repos go here)
+                        /specs (DesignSpec JSON files)
+                    </div>
+                </div>
+            </section>
+
+            <section class="section" id="cloud">
+                <div class="card">
+                    <h2>Managed MCP Cloud (team recommended)</h2>
+                    <p>
+                        Best for teams and agencies. No install. Use an API key.
+                    </p>
+
+                    <h3>Credentials</h3>
+                    <div class="code">
+                        ARCHON_MCP_URL=https://mcp.archon.dev
+                        ARCHON_API_KEY=sk_live_********
+                    </div>
+
+                    <ul>
+                        <li>Central updates (no local install drift)</li>
+                        <li>Shared workspaces and generation history (optional)</li>
+                        <li>Predictable monthly billing</li>
+                    </ul>
+
+                    <div class="callout" style="margin-top:12px;">
+                        <b>Output ownership:</b> always a standard repo you can run, modify, and deploy. No lock-in.
+                    </div>
+                </div>
+            </section>
+
+            <section class="section" id="workflow">
+                <div class="card">
+                    <h2>Workflow (what to ask Claude)</h2>
+
+                    <h3>1) Create a DesignSpec</h3>
+                    <div class="code">
+                        "Design a notifications backend. Use JWT + scopes.
+                        Entities: Notification, User. Include custom operation: /notifications/toggle.
+                        Use Redis cache and a queue for async delivery."
+                    </div>
+
+                    <h3>2) Validate spec</h3>
+                    <div class="code">
+                        Tool: validate_designspec(spec)
+                        Expected: ok=true OR errors you fix in the spec.
+                    </div>
+
+                    <h3>3) Generate project</h3>
+                    <div class="code">
+                        Tool: generate_project(spec, outDir)
+                        Output: runnable repo with Docker + Swagger.
+                    </div>
+
+                    <h3>4) Proof (Docker + Swagger)</h3>
+                    <div class="code">
+                        Tool: docker_smoke(outDir)
+
+                        Expected: containers healthy + /health ready + Swagger loads
+                    </div>
+
+                    <h3>5) Evolve safely</h3>
+                    <ul>
+                        <li><span class="kbd">inject_module</span> — add Redis/queue/payments</li>
+                        <li><span class="kbd">add_entity</span> — add new domain entities incrementally</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="section" id="troubleshooting">
+                <div class="card">
+                    <h2>Troubleshooting</h2>
+
+                    <h3>Claude can’t connect to MCP</h3>
+                    <ul>
+                        <li>Check Claude Desktop config JSON syntax.</li>
+                        <li>Verify the server command path exists and runs locally.</li>
+                        <li>Confirm Node version is installed and accessible.</li>
+                    </ul>
+
+                    <h3>Validation errors</h3>
+                    <ul>
+                        <li>Fix schema errors first (missing required fields).</li>
+                        <li>Then fix semantic errors (e.g., invalid scopes, missing entity binding).</li>
+                    </ul>
+
+                    <h3>Docker smoke fails</h3>
+                    <ul>
+                        <li>Ensure Docker is installed and running.</li>
+                        <li>Check .env values (DB URL, Redis URL if injected).</li>
+                        <li>Run compose manually and inspect logs.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="section" id="support">
+                <div class="card">
+                    <h2>Support</h2>
+                    <p class="muted">
+                        For onboarding, send your use-case + stack + team size. We’ll respond with a demo + integration
+                        steps.
+                    </p>
+
+                    <a class="cta"
+                        href="mailto:you@example.com?subject=Archon%20Onboarding&body=Team%20size%3A%0AUse%20case%3A%0AStack%3A%0ALocal%20or%20Cloud%3F%3A%0A">
+                        Contact support <small>→</small>
+                    </a>
+
+                    <p class="small muted" style="margin-top:10px;">
+                        Replace <span class="kbd">you@example.com</span> with your email.
+                    </p>
+                </div>
+
+                <div class="footer">
+                    © <span id="year"></span> Archon · Ambiguity → Architecture → Executable System
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        document.getElementById("year").textContent = new Date().getFullYear();
+    </script>
+</body>
+
+</html>
