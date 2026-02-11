@@ -10,6 +10,16 @@
         "dev": "ts-node src/index.ts",
         "watch": "tsc --watch"
     },
+    "exports": {
+        ".": {
+            "types": "./dist/server.d.ts",
+            "default": "./dist/server.js"
+        },
+        "./stdio": {
+            "types": "./dist/index.d.ts",
+            "default": "./dist/index.js"
+        }
+    },
     "dependencies": {
         "@modelcontextprotocol/sdk": "^1.0.1",
         "zod": "^3.22.4",

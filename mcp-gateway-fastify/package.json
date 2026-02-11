@@ -1,0 +1,25 @@
+{
+  "name": "mcp-gateway-fastify",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "node --watch dist/index.js",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@fastify/static": "^6.0.0",
+    "@modelcontextprotocol/sdk": "^1.0.1",
+    "archon-mcp": "file:../archon-mcp",
+    "fastify": "^4.26.0",
+    "uml-mcp": "file:../uml-mcp",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.6",
+    "tsx": "^4.21.0",
+    "typescript": "^5.3.3"
+  }
+}

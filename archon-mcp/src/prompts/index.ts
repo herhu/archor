@@ -1,5 +1,4 @@
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { ListPromptsRequestSchema, GetPromptRequestSchema } from "@modelcontextprotocol/sdk/types.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
@@ -39,24 +38,20 @@ const PROMPTS = {
     }
 };
 
-export function registerPrompts(server: Server) {
-    server.setRequestHandler(ListPromptsRequestSchema, async () => {
-        return {
-            prompts: Object.values(PROMPTS).map(p => ({
-                name: p.name,
-                description: p.description
-            }))
-        };
-    });
-
-    server.setRequestHandler(GetPromptRequestSchema, async (request) => {
-        const prompt = PROMPTS[request.params.name as keyof typeof PROMPTS];
-        if (!prompt) {
-            throw new Error(`Prompt not found: ${request.params.name}`);
-        }
-
-        return {
-            messages: prompt.messages
-        };
-    });
+export function registerPrompts(server: McpServer) {
+    for (const prompt of Object.values(PROMPTS)) {
+        server.prompt(
+            prompt.name,
+            prompt.description,
+            async () => ({
+                messages: prompt.messages.map(m => ({
+                    role: m.role as "user" | "assistant",
+                    content: {
+                        type: "text",
+                        text: m.content.text
+                    }
+                }))
+            })
+        );
+    }
 }

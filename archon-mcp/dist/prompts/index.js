@@ -1,4 +1,3 @@
-import { ListPromptsRequestSchema, GetPromptRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
@@ -36,21 +35,15 @@ const PROMPTS = {
     }
 };
 export function registerPrompts(server) {
-    server.setRequestHandler(ListPromptsRequestSchema, async () => {
-        return {
-            prompts: Object.values(PROMPTS).map(p => ({
-                name: p.name,
-                description: p.description
+    for (const prompt of Object.values(PROMPTS)) {
+        server.prompt(prompt.name, prompt.description, async () => ({
+            messages: prompt.messages.map(m => ({
+                role: m.role,
+                content: {
+                    type: "text",
+                    text: m.content.text
+                }
             }))
-        };
-    });
-    server.setRequestHandler(GetPromptRequestSchema, async (request) => {
-        const prompt = PROMPTS[request.params.name];
-        if (!prompt) {
-            throw new Error(`Prompt not found: ${request.params.name}`);
-        }
-        return {
-            messages: prompt.messages
-        };
-    });
+        }));
+    }
 }

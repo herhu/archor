@@ -1,43 +1,28 @@
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { ListResourcesRequestSchema, ReadResourceRequestSchema } from "@modelcontextprotocol/sdk/types.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import * as Archon from "archon";
 
 // Get schema from the library export. 
 // Note: We need to ensure 'specSchema' is exported from 'archon' index.
 // If Archon.specSchema isn't available, we might need to cast or fix the export.
 
-export function registerResources(server: Server) {
-    server.setRequestHandler(ListResourcesRequestSchema, async () => {
-        return {
-            resources: [
-                {
-                    uri: "archon://schema/designspec-v1",
-                    name: "DesignSpec v1 Schema",
-                    mimeType: "application/json",
-                    description: "JSON Schema for Archon DesignSpec v1"
-                }
-            ]
-        };
-    });
-
-    server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
-        const { uri } = request.params;
-
-        if (uri === "archon://schema/designspec-v1") {
+export function registerResources(server: McpServer) {
+    server.resource(
+        "designspec-schema-v1",
+        "archon://schema/designspec-v1",
+        async (uri) => {
             // @ts-ignore - Assuming specSchema is exported properly now
             const schema = Archon.specSchema;
 
             return {
                 contents: [
                     {
-                        uri,
+                        uri: uri.href,
                         mimeType: "application/json",
                         text: JSON.stringify(schema, null, 2)
                     }
                 ]
             };
         }
-
-        throw new Error(`Resource not found: ${uri}`);
-    });
+    );
 }
