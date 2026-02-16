@@ -29,8 +29,8 @@ export async function generateCommand(options: { spec: string, out?: string, dry
 
         console.error(chalk.green(`Loaded spec: ${spec.name}`));
 
-        // Default to archon-out if not specified
-        const outDir = path.resolve(process.cwd(), options.out || 'archon-out');
+        // Default to archon-output if not specified
+        const outDir = path.resolve(process.cwd(), options.out || 'archon-output');
 
         // Check overwrite safety
         if (!options.dryRun && !options.force && fs.existsSync(outDir)) {

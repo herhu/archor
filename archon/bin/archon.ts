@@ -21,7 +21,7 @@ program
     .command('generate')
     .description('Generate code from designspec.json')
     .option('-s, --spec <path>', 'Path to designspec.json', 'designspec.json')
-    .option('-o, --out <path>', 'Output directory', 'archon-out')
+    .option('-o, --out <path>', 'Output directory', 'archon-output')
     .option('-f, --force', 'Overwrite existing files', false)
     .option('--no-qa', 'Skip QA checks')
     .option('-d, --dry-run', 'Run without writing files')

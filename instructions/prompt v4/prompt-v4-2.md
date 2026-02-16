@@ -15,37 +15,36 @@ You currently have:
 
 ### A) `archon/` — the CLI + generator core
 
-* Commands:
+- Commands:
+  - `src/commands/init.ts`
+  - `src/commands/generate.ts`
 
-  * `src/commands/init.ts`
-  * `src/commands/generate.ts`
-* Core engine:
+- Core engine:
+  - `core/spec.ts`, `validator.ts` (AJV), `normalize.ts`, `generator.ts`, `io.ts`
 
-  * `core/spec.ts`, `validator.ts` (AJV), `normalize.ts`, `generator.ts`, `io.ts`
-* Templates:
-
-  * `templates/platform/*` (your “platform baseline”: config, logging/pino, filters, health, interceptors, middleware, swagger)
-  * `templates/nestjs/*` (domain/controller/dto/entity/service templates + auth templates)
-  * `templates/scripts/*` (curl helpers + token helpers)
+- Templates:
+  - `templates/platform/*` (your “platform baseline”: config, logging/pino, filters, health, interceptors, middleware, swagger)
+  - `templates/nestjs/*` (domain/controller/dto/entity/service templates + auth templates)
+  - `templates/scripts/*` (curl helpers + token helpers)
 
 This means you already have the **deterministic compiler** foundation.
 
-### B) `archon-out/` — generated output (proves real execution)
+### B) `archon-output/` — generated output (proves real execution)
 
 Your generated app already includes:
 
-* Docker pack: `Dockerfile`, `docker-compose.yml`, `.dockerignore`, `.env.docker`
-* QA + smoke scripts: `qa-docker.sh`, `smoke.sh`, `docker-up/down.sh`, `curl.sh`, `get-token.sh`
-* Platform code in `src/shared/*`
-* Domain module example: `modules/patient/...`
-* E2E test: `test/health.e2e-spec.ts`
+- Docker pack: `Dockerfile`, `docker-compose.yml`, `.dockerignore`, `.env.docker`
+- QA + smoke scripts: `qa-docker.sh`, `smoke.sh`, `docker-up/down.sh`, `curl.sh`, `get-token.sh`
+- Platform code in `src/shared/*`
+- Domain module example: `modules/patient/...`
+- E2E test: `test/health.e2e-spec.ts`
 
 So Phase 1 “platform template + Docker + endpoint tested” is implemented and demonstrably runnable.
 
 ### C) Landing + Prompt docs
 
-* `Landing/index.html`
-* Prompt iterations in `Prompt/`, `Prompt v2/`, `Prompt v3/`
+- `Landing/index.html`
+- Prompt iterations in `Prompt/`, `Prompt v2/`, `Prompt v3/`
 
 Good—this becomes your Prompt assets for MCP “Prompts”.
 
@@ -53,10 +52,10 @@ Good—this becomes your Prompt assets for MCP “Prompts”.
 
 ## What’s strong already (✅)
 
-* Deterministic generation (Handlebars templates + normalize/validate)
-* Platform baseline is solid (logging, correlation-id, error filter, health/ready, swagger, throttling, DB wiring)
-* Docker “one command” experience exists + smoke tests exist
-* A sample domain module exists
+- Deterministic generation (Handlebars templates + normalize/validate)
+- Platform baseline is solid (logging, correlation-id, error filter, health/ready, swagger, throttling, DB wiring)
+- Docker “one command” experience exists + smoke tests exist
+- A sample domain module exists
 
 ---
 
@@ -67,10 +66,10 @@ Right now everything runs as a **CLI**. Phase 2 needs:
 1. A **formal DesignSpec v1** (versioned JSON schema as product contract)
 2. “Incremental actions” (add entity/module into existing repo) — not just generate once
 3. An MCP server layer that exposes:
+   - **Resources** (schemas, examples, templates list)
+   - **Prompts** (your Architect Mode + elicitation flows)
+   - **Tools** (validate spec, generate project, inject module, docker smoke)
 
-   * **Resources** (schemas, examples, templates list)
-   * **Prompts** (your Architect Mode + elicitation flows)
-   * **Tools** (validate spec, generate project, inject module, docker smoke)
 4. A safe “tool sandbox” policy (write only within workspace; no arbitrary shell)
 
 These are all straight lines from what you already built.
@@ -91,13 +90,13 @@ We’ll use **stdio** first (Claude Desktop / local). MCP supports local server 
 
 Deliverables:
 
-* `designspec.schema.json` (JSON Schema)
-* `spec.ts` updated to include:
+- `designspec.schema.json` (JSON Schema)
+- `spec.ts` updated to include:
+  - `version`
+  - `platform` toggles
+  - `modules[]` injection list
 
-  * `version`
-  * `platform` toggles
-  * `modules[]` injection list
-* `validator.ts` validates DesignSpec v1 with good errors (AJV already there)
+- `validator.ts` validates DesignSpec v1 with good errors (AJV already there)
 
 Why first: everything else depends on a stable contract.
 
@@ -109,15 +108,13 @@ Why first: everything else depends on a stable contract.
 
 Create a new package (recommended):
 
-* `archon-mcp/` (new)
-
-  * depends on `@modelcontextprotocol/typescript-sdk` ([GitHub][2])
-  * connects via **stdio transport** (Phase 2 default)
-  * exposes:
-
-    * `listResources` / `readResource` (Resources) ([Model Context Protocol][1])
-    * `listPrompts` / `getPrompt` (Prompts) ([Model Context Protocol][4])
-    * `listTools` / `callTool` (Tools)
+- `archon-mcp/` (new)
+  - depends on `@modelcontextprotocol/typescript-sdk` ([GitHub][2])
+  - connects via **stdio transport** (Phase 2 default)
+  - exposes:
+    - `listResources` / `readResource` (Resources) ([Model Context Protocol][1])
+    - `listPrompts` / `getPrompt` (Prompts) ([Model Context Protocol][4])
+    - `listTools` / `callTool` (Tools)
 
 Tools initially (minimum):
 
@@ -132,17 +129,17 @@ Tools initially (minimum):
 
 **Resources** to expose:
 
-* `archon://schema/designspec-v1`
-* `archon://examples/specs/*`
-* `archon://modules/catalog`
-* `archon://templates/platform-capabilities`
+- `archon://schema/designspec-v1`
+- `archon://examples/specs/*`
+- `archon://modules/catalog`
+- `archon://templates/platform-capabilities`
 
 Resources are explicitly meant to provide contextual data to models. ([Model Context Protocol][1])
 
 **Prompts** to expose (start with 2):
 
-* `archon.architect_mode_v1` (elicitation → spec)
-* `archon.inject_module_v1` (ask the right questions to inject redis/queue)
+- `archon.architect_mode_v1` (elicitation → spec)
+- `archon.inject_module_v1` (ask the right questions to inject redis/queue)
 
 Prompts are first-class in MCP for reusable structured instructions. ([Model Context Protocol][4])
 
@@ -154,19 +151,18 @@ Prompts are first-class in MCP for reusable structured instructions. ([Model Con
 
 Add two module types (prove the pattern):
 
-* `cache.redis`
-* `queue.bullmq`
+- `cache.redis`
+- `queue.bullmq`
 
 Each module gets:
 
-* its own schema fragment
-* templates
-* wiring rules:
-
-  * update `app.module.ts` imports/providers
-  * update config schema + `.env.example` + `.env.docker`
-  * update docker-compose (add redis service if needed)
-  * add docs/snippets
+- its own schema fragment
+- templates
+- wiring rules:
+  - update `app.module.ts` imports/providers
+  - update config schema + `.env.example` + `.env.docker`
+  - update docker-compose (add redis service if needed)
+  - add docs/snippets
 
 This is the “game changer” piece you described.
 
@@ -176,7 +172,7 @@ This is the “game changer” piece you described.
 
 New tool:
 
-* `archon.add_entity(outDir, entitySpec)`
+- `archon.add_entity(outDir, entitySpec)`
 
 This is your Option 1 strategy: start with platform, then grow. It’s also the easiest to sell.
 
@@ -188,10 +184,10 @@ MCP strongly emphasizes client validation and human-in-the-loop safety. ([Model 
 
 So for your tools:
 
-* Only allow writing under a provided `workspaceRoot`
-* No “run arbitrary command” tool in v1
-* docker smoke can be opt-in (explicit tool call)
-* validate inputs (schema) and return structured errors
+- Only allow writing under a provided `workspaceRoot`
+- No “run arbitrary command” tool in v1
+- docker smoke can be opt-in (explicit tool call)
+- validate inputs (schema) and return structured errors
 
 ---
 
@@ -199,22 +195,22 @@ So for your tools:
 
 To analyze “current status” more deeply than the folder tree, paste the content of:
 
-* `archon/src/core/spec.ts`
-* `archon/src/core/validator.ts`
-* (optional) `archon/src/core/generator.ts`
+- `archon/src/core/spec.ts`
+- `archon/src/core/validator.ts`
+- (optional) `archon/src/core/generator.ts`
 
 With those 2–3 files, I can:
 
-* extract the exact current spec shape
-* propose the minimal DesignSpec v1 changes
-* map tool functions for the MCP server (library-call, not subprocess)
+- extract the exact current spec shape
+- propose the minimal DesignSpec v1 changes
+- map tool functions for the MCP server (library-call, not subprocess)
 
 If you paste them, I’ll respond with:
 
-* DesignSpec v1 draft (JSON)
-* module injection contract skeleton
-* MCP tool list + input/output schemas
-* implementation task list ordered for fastest progress
+- DesignSpec v1 draft (JSON)
+- module injection contract skeleton
+- MCP tool list + input/output schemas
+- implementation task list ordered for fastest progress
 
 [1]: https://modelcontextprotocol.io/specification/2025-06-18/server/resources?utm_source=chatgpt.com "Resources"
 [2]: https://github.com/modelcontextprotocol/typescript-sdk?utm_source=chatgpt.com "modelcontextprotocol/typescript-sdk"

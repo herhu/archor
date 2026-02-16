@@ -21,11 +21,13 @@ const jsonSchemaToZod = (schema: any): z.ZodTypeAny => {
 };
 
 export function registerTools(server: McpServer) {
-    server.tool(
+    server.registerTool(
         "archon_validate_spec",
-        "Validate an Archon DesignSpec v1 JSON object. Returns validation errors or success.",
         {
-            spec: z.any().describe("The full DesignSpec JSON object")
+            description: "Validate an Archon DesignSpec v1 JSON object. Returns validation errors or success.",
+            inputSchema: {
+                spec: z.any().describe("The full DesignSpec JSON object")
+            }
         },
         async ({ spec }) => {
             if (!spec) throw new Error("Missing 'spec' argument");
@@ -53,13 +55,15 @@ export function registerTools(server: McpServer) {
         }
     );
 
-    server.tool(
+    server.registerTool(
         "archon_generate_project",
-        "Generate a full project from a DesignSpec v1. WARNING: Overwrites files in output directory.",
         {
-            spec: z.any().describe("The full DesignSpec JSON object"),
-            outDir: z.string().describe("Absolute path to output directory"),
-            dryRun: z.boolean().optional().describe("If true, only simulates generation")
+            description: "Generate a full project from a DesignSpec v1. WARNING: Overwrites files in output directory.",
+            inputSchema: {
+                spec: z.any().describe("The full DesignSpec JSON object"),
+                outDir: z.string().describe("Absolute path to output directory"),
+                dryRun: z.boolean().optional().describe("If true, only simulates generation")
+            }
         },
         async ({ spec, outDir, dryRun }) => {
             if (!spec || !outDir) throw new Error("Missing arguments");
@@ -97,10 +101,12 @@ export function registerTools(server: McpServer) {
         }
     );
 
-    server.tool(
+    server.registerTool(
         "archon_get_schema",
-        "Get the formal JSON Schema for Archon DesignSpec v1. Use this to understand the required structure of a spec.",
-        {},
+        {
+            description: "Get the formal JSON Schema for Archon DesignSpec v1. Use this to understand the required structure of a spec.",
+            inputSchema: {}
+        },
         async () => {
             // @ts-ignore
             const schema = Archon.specSchema;
@@ -110,10 +116,12 @@ export function registerTools(server: McpServer) {
         }
     );
 
-    server.tool(
+    server.registerTool(
         "archon_list_modules",
-        "List available module presets for injection",
-        {},
+        {
+            description: "List available module presets for injection",
+            inputSchema: {}
+        },
         async () => {
             return {
                 content: [{
@@ -126,11 +134,13 @@ export function registerTools(server: McpServer) {
         }
     );
 
-    server.tool(
+    server.registerTool(
         "archon_launch_demo",
-        "Luxury final step: Install deps, Setup Env, Run Docker, and Expose via Cloudflared.",
         {
-            projectDir: z.string().describe("Absolute path to the generated project")
+            description: "Luxury final step: Install deps, Setup Env, Run Docker, and Expose via Cloudflared.",
+            inputSchema: {
+                projectDir: z.string().describe("Absolute path to the generated project")
+            }
         },
         async ({ projectDir }) => {
             if (!projectDir || !fs.existsSync(projectDir)) {
@@ -195,13 +205,15 @@ export function registerTools(server: McpServer) {
         }
     );
 
-    server.tool(
+    server.registerTool(
         "archon_generate_from_uml",
-        "One-shot conversion: ASCII DSL -> Spec -> Generated Project. Use this for rapid iteration from diagrams.",
         {
-            dsl: z.string().describe("The ASCII DSL text."),
-            outDir: z.string().describe("Absolute path to output directory."),
-            dryRun: z.boolean().optional().describe("If true, simulate generation.")
+            description: "One-shot conversion: ASCII DSL -> Spec -> Generated Project. Use this for rapid iteration from diagrams.",
+            inputSchema: {
+                dsl: z.string().describe("The ASCII DSL text."),
+                outDir: z.string().describe("Absolute path to output directory."),
+                dryRun: z.boolean().optional().describe("If true, simulate generation.")
+            }
         },
         async ({ dsl, outDir, dryRun }) => {
             if (!dsl || !outDir) throw new Error("Missing arguments");
