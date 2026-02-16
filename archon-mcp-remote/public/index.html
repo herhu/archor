@@ -1,0 +1,793 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Archon — Claude-Driven Backend Architecture Compiler (MCP)</title>
+  <meta name="description"
+    content="Archon turns ambiguity into architecture and architecture into an executable backend. Claude drives elicitation via MCP; Archon enforces validated DesignSpec and generates a production-grade NestJS backend with Docker proof." />
+
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --panel: #101824;
+      --panel2: #0f1621;
+      --text: #e7eef8;
+      --muted: #a9b7c9;
+      --brand: #7c5cff;
+      --brand2: #35d0ff;
+      --line: rgba(255, 255, 255, .08);
+      --shadow: 0 16px 48px rgba(0, 0, 0, .35);
+      --radius: 18px;
+      --ok: #59ffa8;
+      --warn: #ffd36e;
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 800px at 20% 0%, rgba(124, 92, 255, .18), transparent 60%),
+        radial-gradient(1200px 800px at 90% 10%, rgba(53, 208, 255, .12), transparent 55%),
+        var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+    }
+
+    a {
+      color: inherit
+    }
+
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 24px
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      border: 1px solid var(--line);
+      background: rgba(16, 24, 36, .6);
+      backdrop-filter: blur(10px);
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 14px;
+      z-index: 10;
+      gap: 14px;
+    }
+
+    .logo {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      font-weight: 900;
+      letter-spacing: .2px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--brand), var(--brand2));
+      box-shadow: 0 0 0 4px rgba(124, 92, 255, .14);
+    }
+
+    .nav a {
+      text-decoration: none;
+      color: var(--muted);
+      font-weight: 700;
+      padding: 8px 10px;
+      border-radius: 10px;
+      white-space: nowrap;
+    }
+
+    .nav a:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, .06)
+    }
+
+    .cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(124, 92, 255, .95), rgba(53, 208, 255, .9));
+      color: #06101a;
+      font-weight: 900;
+      text-decoration: none;
+      box-shadow: 0 14px 36px rgba(124, 92, 255, .25);
+      white-space: nowrap;
+    }
+
+    .cta small {
+      opacity: .8;
+      font-weight: 900
+    }
+
+    .ghost {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 900;
+      background: rgba(255, 255, 255, .04);
+      white-space: nowrap;
+    }
+
+    .ghost:hover {
+      background: rgba(255, 255, 255, .07)
+    }
+
+    .hero {
+      padding: 34px 0 18px
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    @media (max-width: 960px) {
+      .grid {
+        grid-template-columns: 1fr
+      }
+
+      .nav {
+        position: static;
+        flex-wrap: wrap
+      }
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      background: rgba(16, 24, 36, .55);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .headline {
+      font-size: clamp(28px, 4vw, 46px);
+      line-height: 1.06;
+      margin: 0 0 10px;
+      letter-spacing: -.7px;
+    }
+
+    .subhead {
+      color: var(--muted);
+      font-size: clamp(14px, 1.6vw, 18px);
+      margin: 0 0 18px;
+    }
+
+    .section {
+      padding: 16px 0
+    }
+
+    h2 {
+      font-size: 20px;
+      margin: 0 0 10px;
+      letter-spacing: -.2px
+    }
+
+    h3 {
+      margin: 0 0 8px;
+      font-size: 16px;
+      color: var(--text)
+    }
+
+    p {
+      margin: 10px 0;
+      color: var(--muted)
+    }
+
+    ul {
+      margin: 10px 0 0;
+      padding-left: 18px;
+      color: var(--muted)
+    }
+
+    li {
+      margin: 6px 0
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    @media (max-width: 760px) {
+      .split {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .pill {
+      display: inline-flex;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(15, 22, 33, .75);
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .pill b {
+      color: var(--text)
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 16px 0 0
+    }
+
+    .chip {
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: rgba(15, 22, 33, .7);
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .highlight {
+      color: var(--text);
+      background: linear-gradient(135deg, rgba(124, 92, 255, .20), rgba(53, 208, 255, .12));
+      border: 1px solid rgba(124, 92, 255, .22);
+      padding: 14px 14px;
+      border-radius: 16px;
+    }
+
+    .kbd {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+      padding: 2px 6px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: rgba(0, 0, 0, .25);
+      color: var(--text);
+    }
+
+    .code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(15, 22, 33, .8);
+      padding: 12px;
+      overflow: auto;
+      color: var(--text);
+    }
+
+    .pricing {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    @media (max-width: 960px) {
+      .pricing {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .price {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(15, 22, 33, .75);
+      position: relative;
+    }
+
+    .price.featured {
+      border-color: rgba(124, 92, 255, .35);
+      box-shadow: 0 18px 52px rgba(124, 92, 255, .18);
+    }
+
+    .badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      font-size: 11px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(124, 92, 255, .35);
+      background: rgba(124, 92, 255, .12);
+      color: var(--text);
+      font-weight: 900;
+      letter-spacing: .2px;
+      text-transform: uppercase;
+    }
+
+    .price .tag {
+      color: var(--muted);
+      font-weight: 900;
+      font-size: 12px;
+      letter-spacing: .3px;
+      text-transform: uppercase;
+    }
+
+    .price .amt {
+      font-size: 30px;
+      font-weight: 1000;
+      margin: 6px 0 2px
+    }
+
+    .price .desc {
+      margin: 0;
+      color: var(--muted)
+    }
+
+    .price ul {
+      margin-top: 10px
+    }
+
+    .footer {
+      margin-top: 22px;
+      padding: 18px 0 26px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .small {
+      font-size: 13px
+    }
+
+    .muted {
+      color: var(--muted)
+    }
+
+    .statusRow {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 760px) {
+      .statusRow {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .check {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(15, 22, 33, .7);
+    }
+
+    .check .icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(89, 255, 168, .08);
+      border: 1px solid rgba(89, 255, 168, .18);
+      color: var(--ok);
+      flex: 0 0 auto;
+      font-weight: 900;
+    }
+
+    .check .icon.warn {
+      background: rgba(255, 211, 110, .08);
+      border: 1px solid rgba(255, 211, 110, .18);
+      color: var(--warn);
+    }
+
+    .check b {
+      color: var(--text)
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header class="nav">
+      <div class="logo">
+        <span class="dot" aria-hidden="true"></span>
+        <span>Archon</span>
+      </div>
+
+      <nav class="muted">
+        <a href="#why">Why</a>
+        <a href="#how">How it works</a>
+        <a href="#integrations">Integration</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#faq">FAQ</a>
+        <a href="docs.html">Docs</a>
+      </nav>
+
+
+      <a class="cta" href="#contact">Get access <small>→</small></a>
+    </header>
+
+    <main>
+      <!-- HERO -->
+      <section class="hero" id="top">
+        <div class="grid">
+          <div class="card">
+            <h1 class="headline">Claude can design your backend — <span
+                style="background:linear-gradient(135deg, rgba(124,92,255,.95), rgba(53,208,255,.9)); -webkit-background-clip:text; background-clip:text; color:transparent;">safely</span>.
+            </h1>
+
+            <p class="subhead">
+              Archon is a <b>backend architecture compiler</b>: it turns ambiguity into a <b>validated DesignSpec</b>,
+              then generates a <b>production-grade NestJS backend</b> with <b>Docker proof</b>.
+              Claude drives the process via <b>MCP tools</b> — Archon enforces the rules.
+            </p>
+
+            <div class="split">
+              <div class="pill"><b>Input:</b> natural language → spec</div>
+              <div class="pill"><b>Output:</b> runnable backend</div>
+              <div class="pill"><b>Guarantee:</b> schema + semantic validation</div>
+              <div class="pill"><b>Proof:</b> Docker + Swagger up</div>
+            </div>
+
+            <div class="chips">
+              <span class="chip">Not vibe coding</span>
+              <span class="chip">Spec-driven</span>
+              <span class="chip">Deterministic generator</span>
+              <span class="chip">Guardrails by design</span>
+              <span class="chip">Incremental evolution</span>
+            </div>
+
+            <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:18px;">
+              <a class="cta" href="#contact">Request access <small>→</small></a>
+              <a class="ghost" href="#integrations">See integration</a>
+            </div>
+
+            <p class="small muted" style="margin-top:14px;">
+              If your team wants AI speed without AI chaos — this is the missing control plane.
+            </p>
+          </div>
+
+          <aside class="card">
+            <h2>⚡ 30-second explanation</h2>
+            <div class="highlight">
+              <p style="margin:0;color:var(--text);">
+                Most AI tools generate code.<br /><br />
+                Archon generates <b>systems</b>:
+                Claude asks the right questions, Archon compiles the answers into a <b>versioned, validated spec</b>,
+                and then generates a <b>repeatable build artifact</b> — a backend that starts with
+                logging, auth, throttling, health checks, and Docker from day one.
+              </p>
+            </div>
+
+            <div class="statusRow">
+              <div class="check">
+                <div class="icon">✓</div>
+                <div>
+                  <b>Validated spec</b>
+                  <div class="muted small">JSON schema + semantic checks</div>
+                </div>
+              </div>
+              <div class="check">
+                <div class="icon">✓</div>
+                <div>
+                  <b>Deterministic output</b>
+                  <div class="muted small">Templates, not hallucinations</div>
+                </div>
+              </div>
+              <div class="check">
+                <div class="icon">✓</div>
+                <div>
+                  <b>Production baseline</b>
+                  <div class="muted small">auth/logging/health/swagger/docker</div>
+                </div>
+              </div>
+              <div class="check">
+                <div class="icon warn">!</div>
+                <div>
+                  <b>AI with guardrails</b>
+                  <div class="muted small">Claude calls tools — doesn’t rewrite code</div>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- WHY -->
+      <section class="section" id="why">
+        <div class="grid">
+          <div class="card">
+            <h2>❌ The problem</h2>
+            <p>
+              “Just ask the model to build the backend” fails for teams because it produces:
+            </p>
+            <ul>
+              <li>inconsistent structure across files</li>
+              <li>missing security decisions (authz, scopes, boundaries)</li>
+              <li>no regeneration path when requirements change</li>
+              <li>no reproducible quality gates</li>
+            </ul>
+            <p class="muted">
+              That’s why most teams ban free-form AI code in production.
+            </p>
+          </div>
+
+          <div class="card">
+            <h2>✅ The solution</h2>
+            <p>
+              Archon makes backend generation <b>safe and repeatable</b> by enforcing a strict contract:
+              <b>DesignSpec v1</b>, validated before anything is generated.
+            </p>
+            <ul>
+              <li><b>Ambiguity → Architecture → Executable System</b></li>
+              <li>bounded domains, entities, APIs, permissions</li>
+              <li>optional module injections (Redis, queues, etc.)</li>
+              <li>Docker + smoke checks for proof</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- HOW IT WORKS -->
+      <section class="section" id="how">
+        <div class="card">
+          <h2>🚀 How it works (the compiler pipeline)</h2>
+
+          <div class="split" style="margin-top:10px;">
+            <div class="pill"><b>1)</b> Claude elicits requirements</div>
+            <div class="pill"><b>2)</b> Claude produces DesignSpec v1</div>
+            <div class="pill"><b>3)</b> Archon validates spec + constraints</div>
+            <div class="pill"><b>4)</b> Archon generates backend deterministically</div>
+            <div class="pill"><b>5)</b> Docker smoke test + Swagger proof</div>
+            <div class="pill"><b>6)</b> Evolve safely: add entity/module later</div>
+          </div>
+
+          <p class="muted" style="margin-top:12px;">
+            Key principle: after the spec is valid, generation is template-driven — not “AI writes code”.
+          </p>
+
+          <div class="code" style="margin-top:12px;">
+            Idea (messy) → Claude (elicitation) → DesignSpec.json (strict) → validate → generate → docker up → swagger
+          </div>
+        </div>
+      </section>
+
+      <!-- INTEGRATION -->
+      <section class="section" id="integrations">
+        <div class="card">
+          <h2>🔌 Integration (how teams use it)</h2>
+          <div class="split">
+            <div>
+              <h3>Claude Desktop (local MCP via stdio)</h3>
+              <p class="muted">
+                Connect Archon MCP locally. Claude discovers resources/tools and calls them:
+                <span class="kbd">validate_designspec</span>,
+                <span class="kbd">generate_project</span>,
+                <span class="kbd">docker_smoke</span>,
+                <span class="kbd">inject_module</span>.
+              </p>
+              <div class="code">
+                {
+                "mcpServers": {
+                "archon": {
+                "command": "node",
+                "args": ["./archon-mcp/dist/index.js"],
+                "env": {
+                "ARCHON_WORKSPACE": "/absolute/path/to/workspace"
+                }
+                }
+                }
+                }
+              </div>
+              <p class="small muted" style="margin-top:10px;">
+                Local mode is ideal for pilots, internal use, and security-sensitive teams.
+              </p>
+            </div>
+
+            <div>
+              <h3>Managed MCP Cloud (recommended for teams)</h3>
+              <p class="muted">
+                Use Archon as a hosted MCP endpoint with an API key. No install. Predictable team billing.
+              </p>
+              <div class="code">
+                ARCHON_MCP_URL=https://mcp.archon.dev
+                ARCHON_API_KEY=sk_live_********
+
+                (Claude config points to hosted endpoint)
+              </div>
+              <p class="small muted" style="margin-top:10px;">
+                Cloud mode unlocks: shared workspaces, usage history, team onboarding, and faster updates.
+              </p>
+            </div>
+          </div>
+
+          <p class="muted" style="margin-top:12px;">
+            Output is always yours: a runnable repo with Docker + Swagger + scripts. No lock-in.
+          </p>
+        </div>
+      </section>
+
+      <!-- DELIVERABLES -->
+      <section class="section" id="deliverables">
+        <div class="card">
+          <h2>📦 What it generates (today)</h2>
+          <div class="split">
+            <div>
+              <h3>Platform baseline</h3>
+              <ul>
+                <li>config + env handling</li>
+                <li>structured logging + correlation id</li>
+                <li>global validation + error filter</li>
+                <li>health/ready endpoints</li>
+                <li>Swagger/OpenAPI</li>
+                <li>rate limiting + CORS + helmet</li>
+                <li>Docker + compose + smoke scripts</li>
+              </ul>
+            </div>
+            <div>
+              <h3>Domain modules</h3>
+              <ul>
+                <li>entities + DTOs + services + controllers</li>
+                <li>JWT guard + scopes guard</li>
+                <li>domain-based scopes like <span class="kbd">notifications:read</span></li>
+                <li>custom operations supported</li>
+                <li>optional injections: <span class="kbd">cache.redis</span>, <span class="kbd">queue.bullmq</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PRICING -->
+      <section class="section" id="pricing">
+        <div class="card">
+          <h2>💰 Pricing (built for teams, not token math)</h2>
+          <p class="muted">
+            You’re buying a control plane + compiler — predictable cost, enforceable standards, reusable outputs.
+          </p>
+
+          <div class="pricing" style="margin-top:12px;">
+            <div class="price">
+              <div class="tag">Starter</div>
+              <div class="amt">$149<span class="muted" style="font-size:14px;font-weight:800;">/mo</span></div>
+              <p class="desc">Solo builders validating specs + generating foundations.</p>
+              <ul>
+                <li>Local MCP (stdio)</li>
+                <li>DesignSpec validation</li>
+                <li>Generate full backend foundation</li>
+                <li>1 workspace</li>
+              </ul>
+            </div>
+
+            <div class="price featured">
+              <div class="badge">Most teams</div>
+              <div class="tag">Team</div>
+              <div class="amt">$999<span class="muted" style="font-size:14px;font-weight:800;">/mo</span></div>
+              <p class="desc">AI speed with guardrails — the plan that gets you to production.</p>
+              <ul>
+                <li>Managed MCP Cloud + API keys</li>
+                <li>Module injection (Redis, queues)</li>
+                <li>Incremental evolution (add entity/module)</li>
+                <li>Docker smoke checks</li>
+                <li>Up to 5 workspaces</li>
+              </ul>
+            </div>
+
+            <div class="price">
+              <div class="tag">Enterprise</div>
+              <div class="amt">$5k+<span class="muted" style="font-size:14px;font-weight:800;">/mo</span></div>
+              <p class="desc">Self-host, compliance, custom modules, governance.</p>
+              <ul>
+                <li>Self-hosted MCP server</li>
+                <li>Custom module catalog</li>
+                <li>Audit logs + policy hooks</li>
+                <li>SSO / org controls (optional)</li>
+              </ul>
+            </div>
+          </div>
+
+          <p class="small muted" style="margin-top:12px;">
+            For early access, we onboard manually and set up Claude integration with your team in under 15 minutes.
+          </p>
+        </div>
+      </section>
+
+      <!-- FAQ -->
+      <section class="section" id="faq">
+        <div class="card">
+          <h2>🧠 FAQ</h2>
+          <div class="split">
+            <div>
+              <h3>Is this replacing developers or architects?</h3>
+              <p class="muted">
+                No. Archon enforces architecture decisions and removes low-value boilerplate + drift.
+                Your team designs; Archon makes the design executable and consistent.
+              </p>
+            </div>
+            <div>
+              <h3>How is this different from Cursor / “just ask Claude”?</h3>
+              <p class="muted">
+                Those tools generate code. Archon generates systems:
+                versioned specs, validation, deterministic compilation, and Docker proof.
+              </p>
+            </div>
+            <div>
+              <h3>Do we own the generated code?</h3>
+              <p class="muted">
+                Yes. Output is a standard repo you can run, modify, and deploy. No lock-in.
+              </p>
+            </div>
+            <div>
+              <h3>What’s the smallest meaningful demo?</h3>
+              <p class="muted">
+                “Build a notifications backend with scopes + Redis + Docker; show Swagger.”
+                Archon makes that repeatable in minutes.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CONTACT -->
+      <section class="section" id="contact">
+        <div class="card">
+          <h2>📩 Get early access</h2>
+          <p class="muted">
+            Tell us what you’re building and what stack you use. We’ll respond with a demo link + integration steps.
+          </p>
+
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:12px;">
+            <a class="cta"
+              href="mailto:you@example.com?subject=Archon%20Early%20Access&body=Team%20size%3A%0AUse%20case%3A%0AStack%3A%0AClaude%20Desktop%3F%20(yes%2Fno)%3A%0A">
+              Request access <small>→</small>
+            </a>
+            <a class="ghost" href="#top">Back to top</a>
+            <span class="muted small">Replace <span class="kbd">you@example.com</span> with your email.</span>
+          </div>
+
+          <p class="small muted" style="margin-top:12px;">
+            Tip: if you want to list this in MCP Market, lead with <b>“validated DesignSpec + deterministic
+              compiler”</b>, not “AI code generator”.
+          </p>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <div>© <span id="year"></span> Archon · All rights reserved</div>
+        <div class="muted">Ambiguity → Architecture → Executable System</div>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: archon-mcp-remote/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgres://archon:password@postgres:5432/archon
+      API_KEY_PEPPER: ${API_KEY_PEPPER:-dev_pepper}
+      SESSION_SECRET: ${SESSION_SECRET:-dev_secret_012345678901234567890123}
+      BASE_URL: ${BASE_URL:-http://localhost:3000}
+      OIDC_ISSUER: ${OIDC_ISSUER:-https://example.com}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-dev_client_id}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-dev_client_secret}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: archon-db
+    environment:
+      POSTGRES_USER: archon
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: archon
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Initialize schema on first run
+      - ./src/db/schema.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U archon"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

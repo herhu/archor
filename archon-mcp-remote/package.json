@@ -1,0 +1,27 @@
+{
+  "name": "archon-mcp-remote",
+  "version": "0.1.0",
+  "description": "Remote Gateway for Archon MCP with Auth and Worker Pool",
+  "main": "dist/server.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "tsx watch src/server.ts"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^9.3.1",
+    "@fastify/session": "^10.7.0",
+    "@fastify/static": "^7.0.4",
+    "@modelcontextprotocol/sdk": "^1.0.1",
+    "dotenv": "^16.4.5",
+    "fastify": "^4.26.1",
+    "openid-client": "^5.6.4",
+    "pg-promise": "^11.5.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.19",
+    "tsx": "^4.7.1",
+    "typescript": "^5.3.3"
+  }
+}

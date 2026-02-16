@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archon Dashboard</title>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; max-width: 800px; margin: 0 auto; padding: 2rem; background: #f9f9f9; color: #333; }
+        .card { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 2rem; }
+        h1 { margin-top: 0; }
+        button { background: #0070f3; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-size: 1rem; }
+        button:hover { background: #0051a2; }
+        button.danger { background: #e00; }
+        button.danger:hover { background: #c00; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { text-align: left; padding: 0.75rem; border-bottom: 1px solid #eee; }
+        code { background: #eee; padding: 0.2rem 0.4rem; border-radius: 4px; }
+        .hidden { display: none; }
+        #apiKeyDisplay { margin-top: 1rem; padding: 1rem; background: #e6fffa; border: 1px solid #b2f5ea; border-radius: 4px; color: #234e52; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Archon Dashboard</h1>
+        <div id="loading">Loading user info...</div>
+        <div id="userInfo" class="hidden">
+            <p>Signed in as: <strong id="email"></strong></p>
+            <button onclick="logout()">Sign Out</button>
+        </div>
+        <div id="loginPrompt" class="hidden">
+            <p>You need to sign in to manage API keys.</p>
+            <button onclick="window.location.href='/auth/login'">Sign In with OIDC</button>
+        </div>
+    </div>
+
+    <div id="keysSection" class="card hidden">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h2>API Keys</h2>
+            <button onclick="createKey()">+ Create New Key</button>
+        </div>
+        
+        <div id="apiKeyDisplay" class="hidden">
+            <strong>New Key Created!</strong> Copy it now, you won't see it again:<br>
+            <code id="newKeyToken" style="font-size: 1.2rem; user-select: all;"></code>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Prefix</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="keysTable">
+                <!-- keys go here -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        async function fetchMe() {
+            try {
+                const res = await fetch('/v1/me');
+                if (res.status === 401) {
+                    showLogin();
+                    return;
+                }
+                const data = await res.json();
+                if (data.email) {
+                    showUser(data);
+                    fetchKeys();
+                } else {
+                    showLogin();
+                }
+            } catch (e) {
+                console.error(e);
+                showLogin();
+            }
+        }
+
+        function showLogin() {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('loginPrompt').classList.remove('hidden');
+        }
+
+        function showUser(user) {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('userInfo').classList.remove('hidden');
+            document.getElementById('email').textContent = user.email;
+            document.getElementById('keysSection').classList.remove('hidden');
+        }
+
+        async function fetchKeys() {
+            const res = await fetch('/v1/keys');
+            const keys = await res.json();
+            const tbody = document.getElementById('keysTable');
+            tbody.innerHTML = '';
+            keys.forEach(key => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><code>${key.prefix}...</code></td>
+                    <td>${key.status === 'active' ? '🟢 Active' : '🔴 Revoked'}</td>
+                    <td>${new Date(key.created_at).toLocaleDateString()}</td>
+                    <td>
+                        ${key.status === 'active' ? `<button class="danger" onclick="revokeKey('${key.id}')">Revoke</button>` : ''}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function createKey() {
+            if (!confirm("Generate a new API key?")) return;
+            const res = await fetch('/v1/keys', { method: 'POST' });
+            const data = await res.json();
+            document.getElementById('apiKeyDisplay').classList.remove('hidden');
+            document.getElementById('newKeyToken').textContent = data.apiKey;
+            fetchKeys();
+        }
+
+        async function revokeKey(id) {
+            if (!confirm("Are you sure you want to revoke this key?")) return;
+            await fetch(`/v1/keys/${id}`, { method: 'DELETE' });
+            fetchKeys();
+        }
+
+        async function logout() {
+            await fetch('/auth/logout', { method: 'POST' });
+            window.location.reload();
+        }
+
+        fetchMe();
+    </script>
+</body>
+</html>
