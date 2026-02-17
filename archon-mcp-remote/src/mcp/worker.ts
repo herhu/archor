@@ -26,7 +26,10 @@ export class McpWorker {
 
   async request(method: string, params?: any) {
     // Schema that accepts anything
-    const PassthroughSchema = { parse: (x: any) => x }; 
+    const PassthroughSchema = { 
+        parse: (x: any) => x,
+        safeParse: (x: any) => ({ success: true, data: x })
+    }; 
     return this.client.request({ method, params }, PassthroughSchema as any);
   }
 

@@ -13,12 +13,19 @@ function sha256Hex(input: string) {
 }
 
 export async function authenticateApiKey(req: any): Promise<AuthContext> {
-  const hdr = req.headers?.authorization ?? "";
-  const s = String(hdr);
-  if (!s.startsWith("Bearer "))
-    throw Object.assign(new Error("Missing Bearer token"), { statusCode: 401 });
+  let token = "";
+  const authHeader = req.headers?.authorization;
+  
+  if (authHeader && String(authHeader).startsWith("Bearer ")) {
+    token = String(authHeader).slice("Bearer ".length).trim();
+  } else if (req.query?.apiKey) {
+    token = String(req.query.apiKey).trim();
+  }
 
-  const token = s.slice("Bearer ".length).trim();
+  if (!token) {
+    throw Object.assign(new Error("Missing Bearer token or apiKey query param"), { statusCode: 401 });
+  }
+
   if (!token.startsWith("sk_"))
     throw Object.assign(new Error("Invalid key format"), { statusCode: 401 });
 

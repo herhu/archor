@@ -87,6 +87,7 @@ export async function buildWorkerPool(opts: PoolOpts) {
       const res = await w.request(job.method, job.params);
       job.resolve(res);
     } catch (e: any) {
+        console.error("[Pool Error Details]", JSON.stringify(e, Object.getOwnPropertyNames(e)));
         status = e?.statusCode === 403 ? "denied" : "error";
       job.reject(e);
     } finally {

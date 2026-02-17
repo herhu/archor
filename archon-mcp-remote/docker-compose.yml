@@ -6,12 +6,13 @@ services:
       context: ..
       dockerfile: archon-mcp-remote/Dockerfile
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
       DATABASE_URL: postgres://archon:password@postgres:5432/archon
       API_KEY_PEPPER: ${API_KEY_PEPPER:-dev_pepper}
       SESSION_SECRET: ${SESSION_SECRET:-dev_secret_012345678901234567890123}
-      BASE_URL: ${BASE_URL:-http://localhost:3000}
+      BASE_URL: ${BASE_URL:-http://localhost:3001}
+      NODE_TLS_REJECT_UNAUTHORIZED: "0" # Fix for local issuer certificate error in Alpine
       OIDC_ISSUER: ${OIDC_ISSUER:-https://example.com}
       OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-dev_client_id}
       OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-dev_client_secret}

@@ -16,13 +16,17 @@ export const config = {
   allowExecTools: process.env.ALLOW_EXEC_TOOLS === "true", // default false
 
   // OIDC / Auth
-  baseUrl: process.env.BASE_URL!, // e.g. https://auth.yourdomain.com
+  baseUrl: process.env.BASE_URL!.replace(/\/$/, ""), // e.g. https://auth.yourdomain.com
   oidc: {
     issuer: process.env.OIDC_ISSUER!,
     clientId: process.env.OIDC_CLIENT_ID!,
     clientSecret: process.env.OIDC_CLIENT_SECRET!,
     redirectPath: process.env.OIDC_REDIRECT_PATH ?? "/auth/callback",
     scopes: (process.env.OIDC_SCOPES ?? "openid profile email").split(" "),
+    authUrl: process.env.OIDC_AUTH_URL,
+    tokenUrl: process.env.OIDC_TOKEN_URL,
+    userInfoUrl: process.env.OIDC_USERINFO_URL, // note the casing difference in env vs implementation
+    jwksUri: process.env.OIDC_JWKS_URI,
   },
   sessionSecret: process.env.SESSION_SECRET!, // strong random 32+ bytes
   cookieSecure: process.env.COOKIE_SECURE !== "false", // true in prod

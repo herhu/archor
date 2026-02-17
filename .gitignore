@@ -4,3 +4,4 @@
 .env
 
 archon_output/
+archon-mcp-remote/logs.txt

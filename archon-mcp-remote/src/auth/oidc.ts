@@ -27,22 +27,33 @@ export async function registerOidc(app: FastifyInstance) {
   await app.register(session, {
     secret: config.sessionSecret,
     cookie: {
-      secure: config.cookieSecure,
+      secure: false, // FORCE FALSE FOR DEBUGGING
       httpOnly: true,
       sameSite: "lax",
+      maxAge: 1800000, // 30 mins
       path: "/",
     },
     saveUninitialized: false,
   });
 
-  // Discover OIDC provider
+  // Discover OIDC provider or use explicit config
   let issuer: Issuer;
-  try {
-      issuer = await Issuer.discover(config.oidc.issuer);
-  } catch (e) {
-      console.warn("Failed to discover OIDC issuer, implementation will fail until fixed: " + e);
-      // Dummy issuer to allow start up if offline/misconfigured, will fail on actual calls
-      issuer = new Issuer({ issuer: config.oidc.issuer, authorization_endpoint: "", token_endpoint: "", jwks_uri: "" }); 
+  if (config.oidc.authUrl && config.oidc.tokenUrl && config.oidc.jwksUri) {
+      issuer = new Issuer({
+          issuer: config.oidc.issuer,
+          authorization_endpoint: config.oidc.authUrl,
+          token_endpoint: config.oidc.tokenUrl,
+          userinfo_endpoint: config.oidc.userInfoUrl,
+          jwks_uri: config.oidc.jwksUri,
+      });
+  } else {
+      try {
+          issuer = await Issuer.discover(config.oidc.issuer);
+      } catch (e) {
+          console.warn("Failed to discover OIDC issuer, implementation will fail until fixed: " + e);
+          // Dummy issuer fallback
+          issuer = new Issuer({ issuer: config.oidc.issuer, authorization_endpoint: "", token_endpoint: "", jwks_uri: "" }); 
+      }
   }
 
   const client = new issuer.Client({
@@ -54,6 +65,7 @@ export async function registerOidc(app: FastifyInstance) {
 
   // Login
   app.get("/auth/login", async (req, reply) => {
+    console.log("[DEBUG] /auth/login hit. Config Secure:", config.cookieSecure);
     const verifier = generators.codeVerifier();
     const challenge = sha256Base64Url(verifier);
 
@@ -63,6 +75,8 @@ export async function registerOidc(app: FastifyInstance) {
     req.session.pkceVerifier = verifier;
     req.session.oauthState = state;
     req.session.oauthNonce = nonce;
+    
+    console.log("[DEBUG] Session set:", { state, nonce });
 
     const authUrl = client.authorizationUrl({
       scope: config.oidc.scopes.join(" "),
