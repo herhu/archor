@@ -30,6 +30,14 @@ export const config = {
   },
   sessionSecret: process.env.SESSION_SECRET!, // strong random 32+ bytes
   cookieSecure: process.env.COOKIE_SECURE !== "false", // true in prod
+
+  // AWS S3
+  s3: {
+    region: process.env.AWS_REGION ?? "us-east-1",
+    bucket: process.env.AWS_BUCKET_NAME!,
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+  },
 };
 
 // Basic validation

@@ -59,6 +59,27 @@
         </table>
     </div>
 
+    <div id="generationsSection" class="card hidden">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h2>Project Generations</h2>
+            <button onclick="fetchGenerations()">Refresh</button>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Duration</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="generationsTable">
+                <!-- generations go here -->
+            </tbody>
+        </table>
+    </div>
+
     <script>
         async function fetchMe() {
             try {
@@ -71,6 +92,7 @@
                 if (data.email) {
                     showUser(data);
                     fetchKeys();
+                    fetchGenerations();
                 } else {
                     showLogin();
                 }
@@ -90,6 +112,7 @@
             document.getElementById('userInfo').classList.remove('hidden');
             document.getElementById('email').textContent = user.email;
             document.getElementById('keysSection').classList.remove('hidden');
+            document.getElementById('generationsSection').classList.remove('hidden');
         }
 
         async function fetchKeys() {
@@ -124,6 +147,41 @@
             if (!confirm("Are you sure you want to revoke this key?")) return;
             await fetch(`/v1/keys/${id}`, { method: 'DELETE' });
             fetchKeys();
+        }
+
+        async function fetchGenerations() {
+            try {
+                const res = await fetch('/v1/generations');
+                if (!res.ok) return;
+                const gens = await res.json();
+                const tbody = document.getElementById('generationsTable');
+                tbody.innerHTML = '';
+                gens.forEach(gen => {
+                    const tr = document.createElement('tr');
+                    const date = new Date(gen.created_at).toLocaleString();
+                    const duration = gen.duration_ms ? `${(gen.duration_ms / 1000).toFixed(1)}s` : '-';
+                    const statusColor = gen.status === 'success' ? 'green' : gen.status === 'error' ? 'red' : 'orange';
+                    
+                    let actions = '';
+                    if (gen.status === 'success') {
+                        actions = `
+                            <a href="/v1/generations/${gen.id}/download" target="_blank" style="margin-right:10px;text-decoration:none;background:#eee;padding:4px 8px;border-radius:4px;">📦 ZIP</a>
+                            <a href="/v1/generations/${gen.id}/spec" target="_blank" style="text-decoration:none;background:#eee;padding:4px 8px;border-radius:4px;">📄 Spec</a>
+                        `;
+                    } else if (gen.status === 'error') {
+                        actions = `<span style="color:red" title="${gen.error}">Error details</span>`;
+                    }
+
+                    tr.innerHTML = `
+                        <td><small>${gen.id.slice(0,8)}...</small></td>
+                        <td style="color:${statusColor}"><strong>${gen.status.toUpperCase()}</strong></td>
+                        <td><small>${date}</small></td>
+                        <td>${duration}</td>
+                        <td>${actions}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (e) { console.error(e); }
         }
 
         async function logout() {

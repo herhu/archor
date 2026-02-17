@@ -3,6 +3,7 @@ import { authenticateApiKey } from "../auth/apiKey.js";
 import { config } from "../config.js";
 import type { JsonRpcRequest } from "./protocol.js";
 import { ok, err } from "./protocol.js";
+import { generationInterceptor } from "./interceptor.js";
 
 export function registerMcpRoutes(app: FastifyInstance, pool: any) {
   // SSE channel (simple keepalive; you can later stream progress here)
@@ -59,6 +60,24 @@ export function registerMcpRoutes(app: FastifyInstance, pool: any) {
     }
 
     try {
+      // Intercept specific tools
+      if (generationInterceptor.isTargetTool(body.method) && 
+          body.params?.name && 
+          generationInterceptor.isGenerateProject(body.params)) {
+          
+          if (!auth.userId) {
+              throw { statusCode: 400, message: "API Key must be associated with a user to generate projects." };
+          }
+
+          const result = await generationInterceptor.handleGenerateProject(
+              body.params, 
+              auth.userId, 
+              pool, 
+              { scopes: auth.scopes, apiKeyId: auth.apiKeyId }
+          );
+          return reply.send(ok(body.id, result));
+      }
+
       const result = await pool.dispatch(
         { scopes: auth.scopes, apiKeyId: auth.apiKeyId },
         body.method,

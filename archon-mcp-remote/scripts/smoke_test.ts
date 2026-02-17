@@ -1,5 +1,4 @@
 import { spawn } from "child_process";
-import { database } from "../src/db/index.js";
 
 async function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -28,6 +27,11 @@ async function main() {
       OIDC_CLIENT_ID: "test-client",
       OIDC_CLIENT_SECRET: "test-secret",
       SESSION_SECRET: "01234567890123456789012345678901", // 32 chars
+      // Mock S3
+      AWS_BUCKET_NAME: "test-bucket",
+      AWS_ACCESS_KEY_ID: "test-access-key",
+      AWS_SECRET_ACCESS_KEY: "test-secret-key",
+      AWS_REGION: "us-east-1",
     }
   });
 

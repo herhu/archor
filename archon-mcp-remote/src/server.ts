@@ -4,6 +4,7 @@ import { db } from "./db/index.js";
 import { registerHealth } from "./routes/health.js";
 import { registerKeys } from "./routes/keys.js";
 import { registerMe } from "./routes/me.js";
+import { registerGenerations } from "./routes/generations.js";
 import { registerMcpRoutes } from "./mcp/mcpRoutes.js";
 import { buildWorkerPool } from "./mcp/pool.js";
 import { registerOidc } from "./auth/oidc.js";
@@ -54,6 +55,7 @@ async function main() {
   registerHealth(app);
   registerKeys(app);
   registerMe(app); // User info and API Key info
+  registerGenerations(app); // New route
   registerMcpRoutes(app, pool);
 
   await app.listen({ port: config.port, host: "0.0.0.0" });
