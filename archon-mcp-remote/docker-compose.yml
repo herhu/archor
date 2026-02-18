@@ -16,6 +16,11 @@ services:
       OIDC_ISSUER: ${OIDC_ISSUER:-https://example.com}
       OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-dev_client_id}
       OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-dev_client_secret}
+      # S3 Credentials
+      AWS_REGION: ${AWS_REGION}
+      AWS_BUCKET_NAME: ${AWS_BUCKET_NAME}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
     depends_on:
       postgres:
         condition: service_healthy

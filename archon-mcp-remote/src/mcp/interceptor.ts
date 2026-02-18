@@ -3,8 +3,10 @@ import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs-extra';
 import path from 'path';
 import archiver from 'archiver';
+import { PassThrough } from 'stream';
 import { db } from '../db/index.js';
 import { s3Service } from '../services/s3.js';
+import { config } from '../config.js';
 
 export const generationInterceptor = {
   isTargetTool(method: string) {
@@ -22,8 +24,6 @@ export const generationInterceptor = {
     
     // 2. Extract and Capture Spec
     // Tool params: { name: "archon_generate_project", arguments: { spec: ..., outDir: ... } }
-    // Or if using the SDK client structure, params might be the arguments directly if the router unpacks it.
-    // Let's assume params here is `{ name: "archon_generate_project", arguments: { ... } }`
     
     const toolArgs = params.arguments;
     const spec = toolArgs.spec;
@@ -43,9 +43,6 @@ export const generationInterceptor = {
       const modifiedArgs = { ...toolArgs, outDir: tempDir };
 
       // 6. Execute Tool via Pool
-      // We need to call the pool dispatch logic. 
-      // Since we are inside the route handler, we might need to invoke the pool differently or just let the caller do it if we return the modified args.
-      // However, the interceptor is best placed to wrap the entire lifecycle including post-processing.
       
       const startTime = Date.now();
       const result = await pool.dispatch(
@@ -62,17 +59,21 @@ export const generationInterceptor = {
       
       // Zip and Stream Upload
       const archive = archiver('zip', { zlib: { level: 9 } });
+      const passThrough = new PassThrough();
       
+      // Pipe archive to passThrough
+      archive.pipe(passThrough);
+
+      // Start the upload (it will read from passThrough)
+      const uploadPromise = s3Service.uploadStream(zipKey, passThrough, 'application/zip');
+
+      // Add files and finalize
       archive.directory(tempDir, false);
-      archive.finalize();
+      await archive.finalize();
 
-      // Upload the archive stream directly
-      await s3Service.uploadStream(zipKey, archive, 'application/zip');
+      // Wait for upload to finish
+      await uploadPromise;
       
-      // Get sizes for observability (optional, extra calls)
-      // const zipMeta = await s3Service.headObject(zipKey);
-      // const specMeta = await s3Service.headObject(specKey);
-
       // 8. Update DB (Success)
       await db.none(`
         UPDATE generations 
@@ -85,17 +86,19 @@ export const generationInterceptor = {
 
       // 10. Return Enhanced Result
       // We append the download links to the tool output
-      const zipUrl = await s3Service.getPresignedUrl(zipKey);
-      const specUrl = await s3Service.getPresignedUrl(specKey);
+      // const zipUrl = await s3Service.getPresignedUrl(zipKey);
+      // const specUrl = await s3Service.getPresignedUrl(specKey);
+      
+      const dashboardUrl = `${config.baseUrl}/dashboard.html`;
 
       return {
         content: [
           { 
             type: 'text', 
-            text: `Project generated successfully!\n\nID: ${generationId}\n\n[Download ZIP](${zipUrl})\n[Download Spec](${specUrl})` 
+            text: `Project generated successfully!\n\nID: ${generationId}\n\nView and download your project at the Dashboard:\n[Go to Dashboard](${dashboardUrl})` 
           }
         ],
-        _meta: { generationId, zipUrl, specUrl } // Internal meta if needed
+        _meta: { generationId, dashboardUrl } // Internal meta if needed
       };
 
     } catch (error: any) {

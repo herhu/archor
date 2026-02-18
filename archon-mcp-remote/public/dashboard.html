@@ -1,103 +1,180 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Archon Dashboard</title>
-    <style>
-        body { font-family: system-ui, -apple-system, sans-serif; max-width: 800px; margin: 0 auto; padding: 2rem; background: #f9f9f9; color: #333; }
-        .card { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 2rem; }
-        h1 { margin-top: 0; }
-        button { background: #0070f3; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-size: 1rem; }
-        button:hover { background: #0051a2; }
-        button.danger { background: #e00; }
-        button.danger:hover { background: #c00; }
-        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-        th, td { text-align: left; padding: 0.75rem; border-bottom: 1px solid #eee; }
-        code { background: #eee; padding: 0.2rem 0.4rem; border-radius: 4px; }
-        .hidden { display: none; }
-        #apiKeyDisplay { margin-top: 1rem; padding: 1rem; background: #e6fffa; border: 1px solid #b2f5ea; border-radius: 4px; color: #234e52; }
-    </style>
+    <link href="/styles.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+
 </head>
-<body>
-    <div class="card">
-        <h1>Archon Dashboard</h1>
-        <div id="loading">Loading user info...</div>
-        <div id="userInfo" class="hidden">
-            <p>Signed in as: <strong id="email"></strong></p>
-            <button onclick="logout()">Sign Out</button>
-        </div>
-        <div id="loginPrompt" class="hidden">
-            <p>You need to sign in to manage API keys.</p>
-            <button onclick="window.location.href='/auth/login'">Sign In with OIDC</button>
-        </div>
-    </div>
 
-    <div id="keysSection" class="card hidden">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h2>API Keys</h2>
-            <button onclick="createKey()">+ Create New Key</button>
+<body
+    class="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-900 to-black">
+
+    <!-- Navbar -->
+    <nav class="border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="w-8 h-8 bg-gradient-to-br from-archon-500 to-purple-600 rounded-lg flex items-center justify-center font-bold text-white">
+                        A</div>
+                    <span
+                        class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">Archon</span>
+                </div>
+                <div id="userMenu" class="hidden flex items-center gap-4">
+                    <span id="emailDisplay" class="text-sm text-slate-400"></span>
+                    <button onclick="logout()" class="text-sm text-slate-400 hover:text-white transition-colors">Sign
+                        Out</button>
+                </div>
+            </div>
         </div>
-        
-        <div id="apiKeyDisplay" class="hidden">
-            <strong>New Key Created!</strong> Copy it now, you won't see it again:<br>
-            <code id="newKeyToken" style="font-size: 1.2rem; user-select: all;"></code>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+        <!-- Loading State -->
+        <div id="loading" class="flex flex-col items-center justify-center py-20">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-archon-500"></div>
+            <p class="mt-4 text-slate-400">Authenticating...</p>
         </div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Prefix</th>
-                    <th>Status</th>
-                    <th>Created</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="keysTable">
-                <!-- keys go here -->
-            </tbody>
-        </table>
-    </div>
-
-    <div id="generationsSection" class="card hidden">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h2>Project Generations</h2>
-            <button onclick="fetchGenerations()">Refresh</button>
+        <!-- Login Prompt -->
+        <div id="loginPrompt" class="hidden flex flex-col items-center justify-center py-20 text-center">
+            <h2 class="text-3xl font-bold text-white mb-4">Welcome to Archon</h2>
+            <p class="text-slate-400 mb-8 max-w-md">Sign in to access your dashboard, manage API keys, and download
+                generated artifacts.</p>
+            <button onclick="window.location.href='/auth/login'" class="btn-primary text-lg px-8 py-3">
+                Sign In with OIDC
+            </button>
         </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Status</th>
-                    <th>Date</th>
-                    <th>Duration</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="generationsTable">
-                <!-- generations go here -->
-            </tbody>
-        </table>
-    </div>
+
+        <!-- Dashboard Content -->
+        <div id="dashboardContent" class="hidden space-y-8">
+
+            <!-- Stats Overview (Placeholder for premium feel) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="glass-panel p-6">
+                    <h3 class="text-slate-400 text-sm font-medium">Total Generations</h3>
+                    <p class="text-3xl font-bold text-white mt-2" id="statTotalGen">-</p>
+                </div>
+                <div class="glass-panel p-6">
+                    <h3 class="text-slate-400 text-sm font-medium">Active Keys</h3>
+                    <p class="text-3xl font-bold text-white mt-2" id="statActiveKeys">-</p>
+                </div>
+                <div class="glass-panel p-6">
+                    <h3 class="text-slate-400 text-sm font-medium">System Status</h3>
+                    <p class="text-3xl font-bold text-emerald-400 mt-2">Operational</p>
+                </div>
+            </div>
+
+            <!-- API Keys Section -->
+            <section class="glass-panel">
+                <div class="px-6 py-5 border-b border-slate-700/50 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-lg font-semibold text-white">API Keys</h2>
+                        <p class="text-sm text-slate-400">Manage access keys for MCP components.</p>
+                    </div>
+                    <button onclick="createKey()" class="btn-primary text-sm">+ Create Key</button>
+                </div>
+
+                <div id="newKeyAlert"
+                    class="hidden mx-6 mt-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+                    <p class="text-emerald-400 font-medium mb-2">New API Key Created!</p>
+                    <div class="flex gap-2">
+                        <code id="newKeyToken"
+                            class="flex-1 bg-black/30 p-2 rounded text-emerald-300 font-mono text-sm break-all"></code>
+                        <button onclick="copyKey()"
+                            class="px-3 py-1 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 rounded text-sm">Copy</button>
+                    </div>
+                    <p class="text-xs text-emerald-400/70 mt-2">Save this key now. You won't be able to see it again.
+                    </p>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-700/50">
+                        <thead class="bg-slate-800/30">
+                            <tr>
+                                <th class="table-header">Prefix</th>
+                                <th class="table-header">Status</th>
+                                <th class="table-header">Created</th>
+                                <th class="table-header">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="keysTable" class="divide-y divide-slate-700/50">
+                            <!-- Keys injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Generations Section -->
+            <section class="glass-panel">
+                <div class="px-6 py-5 border-b border-slate-700/50 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-lg font-semibold text-white">Project Generations</h2>
+                        <p class="text-sm text-slate-400">Download your generated artifacts and specs.</p>
+                    </div>
+                    <button onclick="fetchGenerations()"
+                        class="text-slate-400 hover:text-white transition-colors p-2 rounded-full hover:bg-slate-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-700/50">
+                        <thead class="bg-slate-800/30">
+                            <tr>
+                                <th class="table-header">Project Name / ID</th>
+                                <th class="table-header">Status</th>
+                                <th class="table-header">Date</th>
+                                <th class="table-header">Duration</th>
+                                <th class="table-header text-right">Downloads</th>
+                            </tr>
+                        </thead>
+                        <tbody id="generationsTable" class="divide-y divide-slate-700/50">
+                            <!-- Generations injected here -->
+                        </tbody>
+                    </table>
+                    <div id="genEmptyState" class="hidden py-12 text-center text-slate-500">
+                        No generations found. Start a project in Chat!
+                    </div>
+                    <div id="genErrorState"
+                        class="hidden py-8 text-center text-red-400 bg-red-500/5 border-t border-red-500/10">
+                        Failed to load generations. Please try again.
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
 
     <script>
-        async function fetchMe() {
+        // --- Auth & Init ---
+        async function init() {
             try {
                 const res = await fetch('/v1/me');
                 if (res.status === 401) {
                     showLogin();
-                    return;
-                }
-                const data = await res.json();
-                if (data.email) {
-                    showUser(data);
-                    fetchKeys();
-                    fetchGenerations();
+                } else if (!res.ok) {
+                    throw new Error('Auth check failed');
                 } else {
-                    showLogin();
+                    const data = await res.json();
+                    if (data.email) {
+                        showDashboard(data);
+                    } else {
+                        showLogin();
+                    }
                 }
             } catch (e) {
-                console.error(e);
+                console.error("Init error:", e);
                 showLogin();
             }
         }
@@ -107,81 +184,15 @@
             document.getElementById('loginPrompt').classList.remove('hidden');
         }
 
-        function showUser(user) {
+        function showDashboard(user) {
             document.getElementById('loading').classList.add('hidden');
-            document.getElementById('userInfo').classList.remove('hidden');
-            document.getElementById('email').textContent = user.email;
-            document.getElementById('keysSection').classList.remove('hidden');
-            document.getElementById('generationsSection').classList.remove('hidden');
-        }
+            document.getElementById('dashboardContent').classList.remove('hidden');
+            document.getElementById('userMenu').classList.remove('hidden');
+            document.getElementById('emailDisplay').textContent = user.email;
 
-        async function fetchKeys() {
-            const res = await fetch('/v1/keys');
-            const keys = await res.json();
-            const tbody = document.getElementById('keysTable');
-            tbody.innerHTML = '';
-            keys.forEach(key => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><code>${key.prefix}...</code></td>
-                    <td>${key.status === 'active' ? '🟢 Active' : '🔴 Revoked'}</td>
-                    <td>${new Date(key.created_at).toLocaleDateString()}</td>
-                    <td>
-                        ${key.status === 'active' ? `<button class="danger" onclick="revokeKey('${key.id}')">Revoke</button>` : ''}
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        async function createKey() {
-            if (!confirm("Generate a new API key?")) return;
-            const res = await fetch('/v1/keys', { method: 'POST' });
-            const data = await res.json();
-            document.getElementById('apiKeyDisplay').classList.remove('hidden');
-            document.getElementById('newKeyToken').textContent = data.apiKey;
+            // Initial Data Fetch
             fetchKeys();
-        }
-
-        async function revokeKey(id) {
-            if (!confirm("Are you sure you want to revoke this key?")) return;
-            await fetch(`/v1/keys/${id}`, { method: 'DELETE' });
-            fetchKeys();
-        }
-
-        async function fetchGenerations() {
-            try {
-                const res = await fetch('/v1/generations');
-                if (!res.ok) return;
-                const gens = await res.json();
-                const tbody = document.getElementById('generationsTable');
-                tbody.innerHTML = '';
-                gens.forEach(gen => {
-                    const tr = document.createElement('tr');
-                    const date = new Date(gen.created_at).toLocaleString();
-                    const duration = gen.duration_ms ? `${(gen.duration_ms / 1000).toFixed(1)}s` : '-';
-                    const statusColor = gen.status === 'success' ? 'green' : gen.status === 'error' ? 'red' : 'orange';
-                    
-                    let actions = '';
-                    if (gen.status === 'success') {
-                        actions = `
-                            <a href="/v1/generations/${gen.id}/download" target="_blank" style="margin-right:10px;text-decoration:none;background:#eee;padding:4px 8px;border-radius:4px;">📦 ZIP</a>
-                            <a href="/v1/generations/${gen.id}/spec" target="_blank" style="text-decoration:none;background:#eee;padding:4px 8px;border-radius:4px;">📄 Spec</a>
-                        `;
-                    } else if (gen.status === 'error') {
-                        actions = `<span style="color:red" title="${gen.error}">Error details</span>`;
-                    }
-
-                    tr.innerHTML = `
-                        <td><small>${gen.id.slice(0,8)}...</small></td>
-                        <td style="color:${statusColor}"><strong>${gen.status.toUpperCase()}</strong></td>
-                        <td><small>${date}</small></td>
-                        <td>${duration}</td>
-                        <td>${actions}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            } catch (e) { console.error(e); }
+            fetchGenerations();
         }
 
         async function logout() {
@@ -189,7 +200,140 @@
             window.location.reload();
         }
 
-        fetchMe();
+        // --- Keys Management ---
+        async function fetchKeys() {
+            try {
+                const res = await fetch('/v1/keys');
+                const keys = await res.json();
+
+                document.getElementById('statActiveKeys').textContent = keys.filter(k => k.status === 'active').length;
+
+                const tbody = document.getElementById('keysTable');
+                tbody.innerHTML = '';
+
+                keys.forEach(key => {
+                    const isActive = key.status === 'active';
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-slate-800/30 transition-colors';
+                    tr.innerHTML = `
+                        <td class="table-cell font-mono text-slate-400">${key.prefix}...</td>
+                        <td class="table-cell">
+                            <span class="status-badge ${isActive ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}">
+                                ${isActive ? 'Active' : 'Revoked'}
+                            </span>
+                        </td>
+                        <td class="table-cell text-slate-500">${new Date(key.created_at).toLocaleDateString()}</td>
+                        <td class="table-cell">
+                            ${isActive ? `<button onclick="revokeKey('${key.id}')" class="btn-danger">Revoke</button>` : ''}
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (e) { console.error("Fetch keys error:", e); }
+        }
+
+        async function createKey() {
+            const res = await fetch('/v1/keys', { method: 'POST' });
+            const data = await res.json();
+            document.getElementById('newKeyAlert').classList.remove('hidden');
+            document.getElementById('newKeyToken').textContent = data.apiKey;
+            fetchKeys();
+        }
+
+        function copyKey() {
+            const key = document.getElementById('newKeyToken').textContent;
+            navigator.clipboard.writeText(key);
+            alert("Copied to clipboard!");
+        }
+
+        async function revokeKey(id) {
+            if (!confirm("Are you sure? This cannot be undone.")) return;
+            await fetch(`/v1/keys/${id}`, { method: 'DELETE' });
+            fetchKeys();
+        }
+
+        // --- Generations ---
+        async function fetchGenerations() {
+            const tbody = document.getElementById('generationsTable');
+            const emptyState = document.getElementById('genEmptyState');
+            const errorState = document.getElementById('genErrorState');
+
+            try {
+                // tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-slate-500">Loading...</td></tr>';
+                errorState.classList.add('hidden');
+
+                const res = await fetch('/v1/generations');
+                if (!res.ok) throw new Error('Failed to fetch');
+
+                const gens = await res.json();
+                document.getElementById('statTotalGen').textContent = gens.length;
+
+                tbody.innerHTML = '';
+
+                if (gens.length === 0) {
+                    emptyState.classList.remove('hidden');
+                    return;
+                }
+                emptyState.classList.add('hidden');
+
+                gens.forEach(gen => {
+                    const date = new Date(gen.created_at).toLocaleString();
+                    const duration = gen.duration_ms ? `${(gen.duration_ms / 1000).toFixed(1)}s` : '-';
+                    const isSuccess = gen.status === 'success';
+                    const isError = gen.status === 'error';
+
+                    // Meta handling
+                    const specName = gen.meta?.specName || 'Untitled Project';
+
+                    let statusHtml = '';
+                    if (isSuccess) statusHtml = `<span class="status-badge bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Success</span>`;
+                    else if (isError) statusHtml = `<span class="status-badge bg-red-500/10 text-red-400 border border-red-500/20" title="${gen.error}">Error</span>`;
+                    else statusHtml = `<span class="status-badge bg-blue-500/10 text-blue-400 border border-blue-500/20 animate-pulse">Running</span>`;
+
+                    let actionsHtml = '';
+                    if (isSuccess) {
+                        actionsHtml = `
+                            <div class="flex justify-end gap-2">
+                                <a href="/v1/generations/${gen.id}/spec" target="_blank" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-md text-sm transition-colors flex items-center gap-1">
+                                    <span class="opacity-50">{}</span> Spec
+                                </a>
+                                <a href="/v1/generations/${gen.id}/download" target="_blank" class="px-3 py-1.5 bg-archon-600 hover:bg-archon-500 text-white rounded-md text-sm transition-colors font-medium flex items-center gap-1 shadow-lg shadow-archon-900/20">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                    Download ZIP
+                                </a>
+                            </div>
+                        `;
+                    } else if (isError) {
+                        actionsHtml = `<span class="text-xs text-red-400 truncate max-w-[200px] block" title="${gen.error}">${gen.error || 'Unknown error'}</span>`;
+                    }
+
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-slate-800/30 transition-colors group';
+                    tr.innerHTML = `
+                        <td class="table-cell">
+                            <div class="flex flex-col">
+                                <span class="font-medium text-white">${specName}</span>
+                                <span class="text-xs text-slate-500 font-mono">${gen.id}</span>
+                            </div>
+                        </td>
+                        <td class="table-cell">${statusHtml}</td>
+                        <td class="table-cell text-slate-500">${date}</td>
+                        <td class="table-cell text-slate-500 font-mono text-xs">${duration}</td>
+                        <td class="table-cell text-right">${actionsHtml}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+            } catch (e) {
+                console.error("Fetch generations error:", e);
+                errorState.classList.remove('hidden');
+                // tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-red-400">Failed to load generations.</td></tr>';
+            }
+        }
+
+        // Start
+        init();
     </script>
 </body>
+
 </html>

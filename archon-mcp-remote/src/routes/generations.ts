@@ -17,17 +17,20 @@ export async function registerGenerations(app: FastifyInstance) {
   
   // List generations
   app.get("/v1/generations", async (req: any, reply) => {
-    // Check Auth
-    // The previous implementation of `authenticateApiKey` was for MCP.
-    // For REST API, we likely use the session from OIDC.
-    // If we are using fastify-session + openid-client.
-    
-    // Let's assume req.session.user contains the user info as per typical OIDC flows.
     const user = req.session?.get("user");
     if (!user || !user.sub) {
         return reply.code(401).send({ error: "Unauthorized" });
     }
-    const userId = user.sub;
+    
+    // Resolve internal User ID from OIDC Subject
+    const userRow = await db.oneOrNone<{id: string}>("SELECT id FROM users WHERE oidc_sub = $1", [user.sub]);
+    if (!userRow) {
+        // User authenticated but not found in our DB (shouldn't happen if auth flow is correct)
+        return reply.code(401).send({ error: "User record not found" });
+    }
+    const userId = userRow.id;
+
+    console.log(`[Generations] Fetching for internal user_id: ${userId} (oidc: ${user.sub})`);
 
     try {
         const rows = await db.manyOrNone(`
@@ -50,7 +53,14 @@ export async function registerGenerations(app: FastifyInstance) {
     if (!user || !user.sub) {
         return reply.code(401).send({ error: "Unauthorized" });
     }
-    const userId = user.sub;
+    
+    // Resolve internal User ID
+    const userRow = await db.oneOrNone<{id: string}>("SELECT id FROM users WHERE oidc_sub = $1", [user.sub]);
+    if (!userRow) {
+        return reply.code(401).send({ error: "User record not found" });
+    }
+    const userId = userRow.id;
+    
     const genId = req.params.id;
 
     try {
@@ -76,7 +86,14 @@ export async function registerGenerations(app: FastifyInstance) {
     if (!user || !user.sub) {
         return reply.code(401).send({ error: "Unauthorized" });
     }
-    const userId = user.sub;
+    
+    // Resolve internal User ID
+    const userRow = await db.oneOrNone<{id: string}>("SELECT id FROM users WHERE oidc_sub = $1", [user.sub]);
+    if (!userRow) {
+        return reply.code(401).send({ error: "User record not found" });
+    }
+    const userId = userRow.id;
+
     const genId = req.params.id;
 
     try {
