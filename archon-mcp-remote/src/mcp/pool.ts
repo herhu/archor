@@ -15,6 +15,7 @@ const TOOL_SCOPE: Record<string, string> = {
   archon_get_schema: "archon:read",
   archon_list_modules: "archon:read",
   archon_generate_from_uml: "archon:write",
+  archon_generate_diagram: "archon:read",
   archon_launch_demo: "archon:exec", // keep disabled by default
 };
 
@@ -97,9 +98,12 @@ export async function buildWorkerPool(opts: PoolOpts) {
         if (job.method === "tools/call") {
              const toolName = String(job.params?.name ?? "");
              // Fire and forget log
-             db.none("insert into usage_events(api_key_id, tool_name, status, duration_ms) values($1, $2, $3, $4)",
-                 [job.ctx.apiKeyId, toolName, status, duration]
-             ).catch(err => console.error("Failed to log usage:", err));
+             // Skip internal dashboard calls which have a fake apiKeyId
+             if (!job.ctx.apiKeyId.startsWith("dashboard-")) {
+                 db.none("insert into usage_events(api_key_id, tool_name, status, duration_ms) values($1, $2, $3, $4)",
+                     [job.ctx.apiKeyId, toolName, status, duration]
+                 ).catch(err => console.error("Failed to log usage:", err));
+             }
         }
 
       w.busy = false;
@@ -122,5 +126,16 @@ export async function buildWorkerPool(opts: PoolOpts) {
     for (const w of workers) await w.close();
   }
 
-  return { dispatch, close };
+  async function listTools() {
+      // Pick the first worker to list tools
+      const w = workers[0];
+      if (!w) throw new Error("No workers available");
+      // This bypasses the queue and directly asks a worker. 
+      // Ideally we should queue it, but for debug/startup it's fine if we are careful.
+      // Actually, let's use the dispatch mechanism but with a special internal flag or just use request directly if we can't queue.
+      // We can use w.request directly.
+      return w.request("tools/list", {});
+  }
+
+  return { dispatch, close, listTools };
 }

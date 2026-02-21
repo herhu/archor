@@ -8,6 +8,8 @@ import { execSync } from "child_process";
 import { AsciiParser } from "uml-mcp/dsl";
 // @ts-ignore
 import { transformIRToDesignSpec } from "uml-mcp/core";
+// @ts-ignore
+import { generateModelDiagram, generateSequenceDiagram, generateUseCaseDiagram, generateComponentDiagram } from "uml-mcp/mermaid";
 
 // Utility to define flexible Zod schemas from JSON schema properties
 // This is a simplified migration path - ideally we would define proper Zod schemas
@@ -21,6 +23,8 @@ const jsonSchemaToZod = (schema: any): z.ZodTypeAny => {
 };
 
 export function registerTools(server: McpServer) {
+    console.error("[Archon] Registering tools v1.0.1..."); // Using stderr to be visible in some logs
+    
     server.registerTool(
         "archon_validate_spec",
         {
@@ -250,6 +254,41 @@ export function registerTools(server: McpServer) {
                     type: "text",
                     text: `✅ Project generated from UML at ${outDir}!\n\n📋 **Design Source (DSL):**\n\`\`\`\n${dsl}\n\`\`\``
                 }]
+            };
+        }
+    );
+
+    console.error("[Archon] Registering archon_generate_diagram...");
+    server.registerTool(
+        "archon_generate_diagram",
+        {
+            description: "Generate a Mermaid diagram from a DesignSpec.",
+            inputSchema: {
+                spec: z.any().describe("The full DesignSpec JSON object"),
+                type: z.enum(["model", "sequence", "usecase", "component"]).describe("The type of diagram to generate")
+            }
+        },
+        async ({ spec, type }) => {
+            if (!spec) throw new Error("Missing 'spec' argument");
+
+            let diagram = "";
+            switch (type) {
+                case "model":
+                    diagram = generateModelDiagram(spec);
+                    break;
+                case "sequence":
+                    diagram = generateSequenceDiagram(spec);
+                    break;
+                case "usecase":
+                    diagram = generateUseCaseDiagram(spec);
+                    break;
+                case "component":
+                    diagram = generateComponentDiagram(spec);
+                    break;
+            }
+
+            return {
+                content: [{ type: "text", text: diagram }]
             };
         }
     );

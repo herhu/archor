@@ -9,6 +9,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
 
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: false, theme: 'dark' });
+        window.mermaid = mermaid;
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
 </head>
 
 <body
@@ -154,186 +160,107 @@
                 </div>
             </section>
         </div>
+
     </main>
 
-    <script>
-        // --- Auth & Init ---
-        async function init() {
-            try {
-                const res = await fetch('/v1/me');
-                if (res.status === 401) {
-                    showLogin();
-                } else if (!res.ok) {
-                    throw new Error('Auth check failed');
-                } else {
-                    const data = await res.json();
-                    if (data.email) {
-                        showDashboard(data);
-                    } else {
-                        showLogin();
-                    }
-                }
-            } catch (e) {
-                console.error("Init error:", e);
-                showLogin();
-            }
-        }
+    <!-- Diagram Modal -->
+    <div id="diagramModal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col">
+            <!-- Header -->
+            <div
+                class="px-6 py-4 border-b border-slate-700 flex justify-between items-center bg-slate-800/50 rounded-t-xl">
+                <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                    <span class="text-archon-400">♦</span> <span id="diagramTitle">Project Diagrams</span>
+                </h3>
+                <button onclick="closeDiagramModal()" class="text-slate-400 hover:text-white transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
 
-        function showLogin() {
-            document.getElementById('loading').classList.add('hidden');
-            document.getElementById('loginPrompt').classList.remove('hidden');
-        }
+            <!-- Toolbar -->
+            <div class="px-6 py-3 border-b border-slate-700 bg-slate-800/30 flex gap-4 overflow-x-auto">
+                <button onclick="switchDiagram('model')"
+                    class="diagram-tab active px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                    data-type="model">Model</button>
+                <button onclick="switchDiagram('sequence')"
+                    class="diagram-tab px-4 py-2 rounded-lg text-sm font-medium transition-colors text-slate-400 hover:bg-slate-800"
+                    data-type="sequence">Sequence</button>
+                <button onclick="switchDiagram('usecase')"
+                    class="diagram-tab px-4 py-2 rounded-lg text-sm font-medium transition-colors text-slate-400 hover:bg-slate-800"
+                    data-type="usecase">Flow</button>
+                <button onclick="switchDiagram('component')"
+                    class="diagram-tab px-4 py-2 rounded-lg text-sm font-medium transition-colors text-slate-400 hover:bg-slate-800"
+                    data-type="component">Component</button>
+                <div class="flex-1"></div>
+                <button onclick="editSpec()"
+                    class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                        </path>
+                    </svg>
+                    Edit Spec
+                </button>
+            </div>
 
-        function showDashboard(user) {
-            document.getElementById('loading').classList.add('hidden');
-            document.getElementById('dashboardContent').classList.remove('hidden');
-            document.getElementById('userMenu').classList.remove('hidden');
-            document.getElementById('emailDisplay').textContent = user.email;
+            <!-- Content -->
+            <div class="flex-1 overflow-auto bg-slate-950 p-8 flex items-center justify-center relative">
+                <div id="diagramLoading"
+                    class="hidden absolute inset-0 bg-slate-950/80 flex items-center justify-center z-10">
+                    <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-archon-500"></div>
+                </div>
+                <div id="mermaidContainer" class="w-full h-full flex items-center justify-center overflow-auto">
+                    <!-- SVG injected here -->
+                </div>
+                <div id="diagramError" class="hidden text-red-400 text-center">
+                    <p class="font-bold">Failed to generate diagram</p>
+                    <p id="diagramErrorMsg" class="text-sm opacity-70 mt-1"></p>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            // Initial Data Fetch
-            fetchKeys();
-            fetchGenerations();
-        }
+    <!-- Spec Editor Modal -->
+    <div id="specModal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-[110] flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col">
+            <div
+                class="px-6 py-4 border-b border-slate-700 flex justify-between items-center bg-slate-800/50 rounded-t-xl">
+                <h3 class="text-xl font-bold text-white">Edit Specification</h3>
+                <button onclick="closeSpecModal()" class="text-slate-400 hover:text-white transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+            <div class="flex-1 p-0 relative">
+                <textarea id="specEditor"
+                    class="w-full h-full bg-slate-950 text-slate-300 font-mono text-sm p-4 resize-none focus:outline-none focus:ring-0 border-0"
+                    spellcheck="false"></textarea>
+            </div>
+            <div
+                class="px-6 py-4 border-t border-slate-700 bg-slate-800/50 rounded-b-xl flex justify-between items-center">
+                <span class="text-sm text-slate-400">Modifying this spec will create a new generation version.</span>
+                <div class="flex gap-3">
+                    <button onclick="closeSpecModal()"
+                        class="px-4 py-2 text-slate-300 hover:text-white transition-colors">Cancel</button>
+                    <button onclick="saveAndGenerate()" class="btn-primary px-6 py-2 flex items-center gap-2">
+                        <span id="saveSpinner"
+                            class="hidden animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+                        Generate Version
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        async function logout() {
-            await fetch('/auth/logout', { method: 'POST' });
-            window.location.reload();
-        }
-
-        // --- Keys Management ---
-        async function fetchKeys() {
-            try {
-                const res = await fetch('/v1/keys');
-                const keys = await res.json();
-
-                document.getElementById('statActiveKeys').textContent = keys.filter(k => k.status === 'active').length;
-
-                const tbody = document.getElementById('keysTable');
-                tbody.innerHTML = '';
-
-                keys.forEach(key => {
-                    const isActive = key.status === 'active';
-                    const tr = document.createElement('tr');
-                    tr.className = 'hover:bg-slate-800/30 transition-colors';
-                    tr.innerHTML = `
-                        <td class="table-cell font-mono text-slate-400">${key.prefix}...</td>
-                        <td class="table-cell">
-                            <span class="status-badge ${isActive ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}">
-                                ${isActive ? 'Active' : 'Revoked'}
-                            </span>
-                        </td>
-                        <td class="table-cell text-slate-500">${new Date(key.created_at).toLocaleDateString()}</td>
-                        <td class="table-cell">
-                            ${isActive ? `<button onclick="revokeKey('${key.id}')" class="btn-danger">Revoke</button>` : ''}
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            } catch (e) { console.error("Fetch keys error:", e); }
-        }
-
-        async function createKey() {
-            const res = await fetch('/v1/keys', { method: 'POST' });
-            const data = await res.json();
-            document.getElementById('newKeyAlert').classList.remove('hidden');
-            document.getElementById('newKeyToken').textContent = data.apiKey;
-            fetchKeys();
-        }
-
-        function copyKey() {
-            const key = document.getElementById('newKeyToken').textContent;
-            navigator.clipboard.writeText(key);
-            alert("Copied to clipboard!");
-        }
-
-        async function revokeKey(id) {
-            if (!confirm("Are you sure? This cannot be undone.")) return;
-            await fetch(`/v1/keys/${id}`, { method: 'DELETE' });
-            fetchKeys();
-        }
-
-        // --- Generations ---
-        async function fetchGenerations() {
-            const tbody = document.getElementById('generationsTable');
-            const emptyState = document.getElementById('genEmptyState');
-            const errorState = document.getElementById('genErrorState');
-
-            try {
-                // tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-slate-500">Loading...</td></tr>';
-                errorState.classList.add('hidden');
-
-                const res = await fetch('/v1/generations');
-                if (!res.ok) throw new Error('Failed to fetch');
-
-                const gens = await res.json();
-                document.getElementById('statTotalGen').textContent = gens.length;
-
-                tbody.innerHTML = '';
-
-                if (gens.length === 0) {
-                    emptyState.classList.remove('hidden');
-                    return;
-                }
-                emptyState.classList.add('hidden');
-
-                gens.forEach(gen => {
-                    const date = new Date(gen.created_at).toLocaleString();
-                    const duration = gen.duration_ms ? `${(gen.duration_ms / 1000).toFixed(1)}s` : '-';
-                    const isSuccess = gen.status === 'success';
-                    const isError = gen.status === 'error';
-
-                    // Meta handling
-                    const specName = gen.meta?.specName || 'Untitled Project';
-
-                    let statusHtml = '';
-                    if (isSuccess) statusHtml = `<span class="status-badge bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Success</span>`;
-                    else if (isError) statusHtml = `<span class="status-badge bg-red-500/10 text-red-400 border border-red-500/20" title="${gen.error}">Error</span>`;
-                    else statusHtml = `<span class="status-badge bg-blue-500/10 text-blue-400 border border-blue-500/20 animate-pulse">Running</span>`;
-
-                    let actionsHtml = '';
-                    if (isSuccess) {
-                        actionsHtml = `
-                            <div class="flex justify-end gap-2">
-                                <a href="/v1/generations/${gen.id}/spec" target="_blank" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-md text-sm transition-colors flex items-center gap-1">
-                                    <span class="opacity-50">{}</span> Spec
-                                </a>
-                                <a href="/v1/generations/${gen.id}/download" target="_blank" class="px-3 py-1.5 bg-archon-600 hover:bg-archon-500 text-white rounded-md text-sm transition-colors font-medium flex items-center gap-1 shadow-lg shadow-archon-900/20">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                                    Download ZIP
-                                </a>
-                            </div>
-                        `;
-                    } else if (isError) {
-                        actionsHtml = `<span class="text-xs text-red-400 truncate max-w-[200px] block" title="${gen.error}">${gen.error || 'Unknown error'}</span>`;
-                    }
-
-                    const tr = document.createElement('tr');
-                    tr.className = 'hover:bg-slate-800/30 transition-colors group';
-                    tr.innerHTML = `
-                        <td class="table-cell">
-                            <div class="flex flex-col">
-                                <span class="font-medium text-white">${specName}</span>
-                                <span class="text-xs text-slate-500 font-mono">${gen.id}</span>
-                            </div>
-                        </td>
-                        <td class="table-cell">${statusHtml}</td>
-                        <td class="table-cell text-slate-500">${date}</td>
-                        <td class="table-cell text-slate-500 font-mono text-xs">${duration}</td>
-                        <td class="table-cell text-right">${actionsHtml}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-
-            } catch (e) {
-                console.error("Fetch generations error:", e);
-                errorState.classList.remove('hidden');
-                // tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-red-400">Failed to load generations.</td></tr>';
-            }
-        }
-
-        // Start
-        init();
-    </script>
+    <!-- External JS -->
+    <script src="/dashboard.js"></script>
 </body>
 
 </html>

@@ -1,40 +1,41 @@
 import { DiagramIR } from "../schema/ir.js";
 
 // Basic Archon DesignSpec v1 Types (simplified)
-interface DesignSpec {
+export interface DesignSpec {
   name: string;
   version: string;
   domains: Domain[];
   modules?: any;
 }
 
-interface Domain {
+export interface Domain {
   name: string;
   entities: Entity[];
   services: Service[];
 }
 
-interface Entity {
+export interface Entity {
   name: string;
   primaryKey: string;
   fields: Field[];
 }
 
-interface Field {
+export interface Field {
   name: string;
   type: string;
   primary?: boolean;
   nullable?: boolean;
 }
 
-interface Service {
+export interface Service {
   name: string;
   entity: string;
   crud: string[];
+  route?: string;
   operations?: Operation[];
 }
 
-interface Operation {
+export interface Operation {
   name: string;
   method: string;
   path: string;

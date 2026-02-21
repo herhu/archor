@@ -55,7 +55,7 @@ async function main() {
   registerHealth(app);
   registerKeys(app);
   registerMe(app); // User info and API Key info
-  registerGenerations(app); // New route
+  registerGenerations(app, pool); // New route
   registerMcpRoutes(app, pool);
 
   await app.listen({ port: config.port, host: "0.0.0.0" });
